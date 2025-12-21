@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+
+@theme {
+  /* --- The PipLab Huisstijl Palet --- */
+  /* Dit maakt classes als 'bg-pip-gold' en 'text-pip-green' beschikbaar */
+  --color-pip-gold: #d4af37;
+  --color-pip-dark: #131722;
+  --color-pip-card: #1E222D;
+  --color-pip-border: #2A2E39;
+  --color-pip-text: #D1D4DC;
+  --color-pip-muted: #787D8F;
+  --color-pip-green: #089981;
+  --color-pip-red: #F23645;
+
+  /* Bestaande Next.js variabelen */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* --- Pro Scrollbar Styling (Optioneel, maar mooi) --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #131722; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2E39; 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37; 
+}
