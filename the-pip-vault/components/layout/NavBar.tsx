@@ -1,78 +1,67 @@
 "use client";
 
-import Link from 'next/link';
-import { LayoutDashboard, PlusCircle, LineChart, BookOpen, User } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { Plus, LayoutDashboard, BookOpen } from 'lucide-react'; 
 import { useState } from 'react';
 import AddTradeModal from '../modals/AddTradeModal';
+import Link from 'next/link';
+import UserMenu from './UserMenu'; // <--- Importeer het nieuwe menu
 
-const Navbar = () => {
+const NavBar = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const pathname = usePathname();
-  const [isModalOpen, setIsModalOpen] = useState(false); // <--- 3. State aanmaken
+
+  if (pathname === '/login') return null;
 
   return (
-    <>
-      <nav className="border-b border-pip-border bg-pip-card/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            
-            {/* LOGO */}
-            <div className="flex-shrink-0 flex items-center gap-2">
-              <div className="w-8 h-8 bg-pip-gold rounded-md flex items-center justify-center">
-                <span className="text-pip-dark font-bold text-lg">P</span>
+    <nav className="border-b border-pip-border bg-pip-card/50 backdrop-blur-md sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16 items-center">
+          
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-pip-gold rounded flex items-center justify-center">
+                <span className="text-pip-dark font-black text-xl">P</span>
               </div>
-              <Link href="/" className="text-xl font-bold tracking-wider text-white">
-                THE <span className="text-pip-gold">PIPVAULT</span>
-              </Link>
-            </div>
+              <span className="text-white font-bold tracking-tighter hidden sm:block uppercase">The PipVault</span>
+            </Link>
 
-            {/* DESKTOP MENU */}
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-6">
-                <NavLink href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === "/"} />
-                <NavLink href="/journal" icon={<BookOpen size={18} />} label="Journal" active={pathname === "/journal"} />
-                <NavLink href="/analytics" icon={<LineChart size={18} />} label="Analytics" active={pathname === "/analytics"} />
-              </div>
-            </div>
-
-            {/* RIGHT: ACTIONS */}
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setIsModalOpen(true)} // <--- 4. Open Modal onClick
-                className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-bold py-2 px-4 rounded-md flex items-center gap-2 transition-all shadow-[0_0_10px_rgba(212,175,55,0.2)] hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]"
-              >
-                <PlusCircle size={18} />
-                <span className="hidden sm:inline">New Trade</span>
-              </button>
-              
-              <div className="w-9 h-9 rounded-full bg-pip-border flex items-center justify-center text-pip-muted hover:text-pip-gold cursor-pointer transition-colors">
-                 <User size={20} />
-              </div>
+            <div className="hidden md:flex items-center gap-1">
+              <NavLink href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/'} />
+              <NavLink href="/journal" icon={<BookOpen size={18} />} label="Journal" active={pathname === '/journal'} />
             </div>
           </div>
-        </div>
-      </nav>
 
-      {/* 5. Render de Modal hierbuiten */}
-      <AddTradeModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
-    </>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all active:scale-95 text-sm"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">New Trade</span>
+            </button>
+
+            {/* HET NIEUWE USER MENU */}
+            <UserMenu />
+          </div>
+        </div>
+      </div>
+
+      <AddTradeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </nav>
   );
 };
+
 const NavLink = ({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active: boolean }) => (
   <Link 
     href={href} 
-    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200
-      ${active 
-        ? 'text-pip-gold bg-pip-gold/10' 
-        : 'text-pip-muted hover:text-pip-text hover:bg-white/5'
-      }`}
+    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+      active ? 'text-pip-gold bg-pip-gold/10' : 'text-pip-muted hover:text-white hover:bg-pip-dark'
+    }`}
   >
     {icon}
-    <span>{label}</span>
+    {label}
   </Link>
 );
 
-export default Navbar;
+export default NavBar;

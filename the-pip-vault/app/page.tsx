@@ -7,17 +7,16 @@ import EquityChart from "@/components/dashboard/EquityChart";
 import SetupBreakdown from '@/components/dashboard/SetupBreakdown';
 import EmotionAnalysis from '@/components/dashboard/EmotionAnalysis';
 import CalendarHeatmap from '@/components/dashboard/TradingCalendar';
-import { generateDummyTrades } from "@/utils/demoData";       
-import { Activity, BarChart2, DollarSign, Database, PieChart } from "lucide-react";
+import { Activity, BarChart2, DollarSign, PieChart, Loader2 } from "lucide-react";
+
+const SkeletonBlock = ({ className }: { className?: string }) => (
+  <div className={`bg-pip-card border border-pip-border rounded-xl animate-pulse flex items-center justify-center ${className}`}>
+    <Loader2 className="text-pip-gold/20 animate-spin" size={24} />
+  </div>
+);
 
 export default function Home() {
-  const { trades, addTrade } = useTrades();
-
-  // === DEMO DATA LOADER ===
-  const handleLoadDemoData = () => {
-    const dummyData = generateDummyTrades(5); 
-    dummyData.forEach(trade => addTrade(trade));
-  };
+  const { trades, loading } = useTrades();
 
   // === KPI LOGICA ===
   const stats = useMemo(() => {
@@ -50,6 +49,21 @@ export default function Home() {
     };
   }, [trades]);
 
+  // === LOADING STATE VIEW ===
+  if (loading) {
+    return (
+      <div className="space-y-6 p-4 sm:p-0">
+        <div className="h-12 w-48 bg-pip-card border border-pip-border rounded-lg animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <SkeletonBlock className="h-32" />
+          <SkeletonBlock className="h-32" />
+          <SkeletonBlock className="h-32" />
+        </div>
+        <SkeletonBlock className="h-100 w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       
@@ -63,15 +77,6 @@ export default function Home() {
         </div>
         
         <div className="flex items-center gap-3">
-            {/* Seed Data Button */}
-            <button 
-                onClick={handleLoadDemoData}
-                className="flex items-center gap-2 bg-pip-dark hover:bg-pip-card border border-pip-border hover:border-pip-gold text-pip-muted hover:text-white px-3 py-2 rounded-lg text-xs transition-all"
-            >
-                <Database size={14} />
-                <span>Seed Data</span>
-            </button>
-
             <div className="hidden sm:flex items-center gap-2 bg-pip-dark border border-pip-border px-4 py-2 rounded-full">
                 <Activity size={16} className="text-pip-gold" />
                 <span className="text-sm font-mono text-pip-muted">
@@ -113,7 +118,7 @@ export default function Home() {
       <EquityChart trades={trades} />
 
       {/* === ANALYTICS SECTION === */}
-      {trades.length > 0 && (
+      {trades.length > 0 ? (
         <div className="pt-6 border-t border-pip-border space-y-6 animate-in slide-in-from-bottom-4 duration-700 delay-100">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <PieChart size={20} className="text-pip-gold"/>
@@ -128,6 +133,10 @@ export default function Home() {
                 <SetupBreakdown trades={trades} />
                 <EmotionAnalysis trades={trades} />
             </div>
+        </div>
+      ) : (
+        <div className="pt-12 text-center border-t border-pip-border border-dashed opacity-50">
+           <p className="text-pip-muted">Voeg je eerste trade toe om analytics te zien.</p>
         </div>
       )}
 

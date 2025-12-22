@@ -1,31 +1,12 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { X, Save, Calculator, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Save, CheckCircle, Loader2, Calculator, AlertCircle } from 'lucide-react';
 import { useTrades } from '@/context/TradeContext';
 
 interface AddTradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface TradeFormData {
-  pair: string;
-  direction: 'LONG' | 'SHORT';
-  entryPrice: string;
-  stopLoss: string;
-  takeProfit: string;
-  chartUrl: string;
-  pnl: string;
-  setup: string;   // <--- NIEUW
-  emotion: string; // <--- NIEUW
-}
-
-interface FormErrors {
-  pair?: string;
-  entryPrice?: string;
-  stopLoss?: string;
-  pnl?: string;
 }
 
 const SETUPS = ['Trend Continuation', 'Breakout', 'Reversal', 'Range Bounce', 'News Event'];
@@ -34,16 +15,21 @@ const EMOTIONS = ['Confident', 'Neutral', 'FOMO', 'Greedy', 'Hesitant', 'Revenge
 const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
   const { addTrade } = useTrades();
 
-  const [formData, setFormData] = useState<TradeFormData>({
+  // States
+  const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState({
     pair: '',
-    direction: 'LONG',
+    direction: 'LONG' as 'LONG' | 'SHORT',
     entryPrice: '',
     stopLoss: '',
     takeProfit: '',
     chartUrl: '',
     pnl: '',
-    setup: 'Trend Continuation', // Default
-    emotion: 'Neutral'           // Default
+    setup: 'Trend Continuation',
+    emotion: 'Neutral',
   });
 
   const [calculations, setCalculations] = useState({
@@ -52,9 +38,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     rrRatio: 0
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [showSuccess, setShowSuccess] = useState(false);
-
+  // Reset form bij openen/sluiten
   useEffect(() => {
     if (!isOpen) {
       setFormData({
@@ -66,174 +50,180 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
         chartUrl: '',
         pnl: '',
         setup: 'Trend Continuation',
-        emotion: 'Neutral'
+        emotion: 'Neutral',
       });
-      setCalculations({ risk: 0, reward: 0, rrRatio: 0 });
-      setErrors({});
       setShowSuccess(false);
+      setLoading(false);
+      setInlineError(null);
     }
   }, [isOpen]);
 
-  // Automatische berekeningen (ongewijzigd)
+  // Automatische RR Calculaties
   useEffect(() => {
     const entry = parseFloat(formData.entryPrice);
     const sl = parseFloat(formData.stopLoss);
     const tp = parseFloat(formData.takeProfit);
 
-    if (!isNaN(entry) && !isNaN(sl) && !isNaN(tp)) {
-      let riskVal, rewardVal;
-      if (formData.direction === 'LONG') {
-        riskVal = entry - sl;
-        rewardVal = tp - entry;
-      } else {
-        riskVal = sl - entry;
-        rewardVal = entry - tp;
-      }
+    if (!isNaN(entry) && !isNaN(sl)) {
+      const riskVal = Math.abs(entry - sl);
+      const rewardVal = !isNaN(tp) ? Math.abs(tp - entry) : 0;
+      
       const isJPY = formData.pair.toUpperCase().includes('JPY');
       const multiplier = isJPY ? 100 : 10000;
-      const riskPips = riskVal * multiplier;
-      const rewardPips = rewardVal * multiplier;
 
-      if (riskVal > 0) {
-        const rr = rewardVal / riskVal;
-        setCalculations({
-          risk: parseFloat(riskPips.toFixed(1)), 
-          reward: parseFloat(rewardPips.toFixed(1)),
-          rrRatio: parseFloat(rr.toFixed(2))
-        });
-      }
+      setCalculations({
+        risk: parseFloat((riskVal * multiplier).toFixed(1)),
+        reward: parseFloat((rewardVal * multiplier).toFixed(1)),
+        rrRatio: riskVal > 0 ? parseFloat((rewardVal / riskVal).toFixed(2)) : 0
+      });
     }
-  }, [formData.entryPrice, formData.stopLoss, formData.takeProfit, formData.direction, formData.pair]);
+  }, [formData.entryPrice, formData.stopLoss, formData.takeProfit, formData.pair]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
+    if (inlineError) setInlineError(null); 
   };
 
-  const handleSave = () => {
-    const newErrors: FormErrors = {};
-    if (!formData.pair) newErrors.pair = "Pair is verplicht";
-    if (!formData.entryPrice) newErrors.entryPrice = "Vul een entry prijs in";
-    if (!formData.stopLoss) newErrors.stopLoss = "Vul een stop loss in";
-    if (!formData.pnl) newErrors.pnl = "Vul resultaat in";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+  const handleSave = async () => {
+    if (!formData.pair || !formData.entryPrice || !formData.pnl) {
+      setInlineError("Vul de verplichte velden in: Pair, Entry en PnL.");
       return;
     }
 
-    addTrade({
-      pair: formData.pair.toUpperCase(),
-      direction: formData.direction,
-      entryPrice: parseFloat(formData.entryPrice),
-      stopLoss: parseFloat(formData.stopLoss),
-      takeProfit: parseFloat(formData.takeProfit),
-      chartUrl: formData.chartUrl,
-      riskPips: calculations.risk,
-      rewardPips: calculations.reward,
-      rrRatio: calculations.rrRatio,
-      pnl: parseFloat(formData.pnl),
-      setup: formData.setup,    // <--- Opslaan
-      emotion: formData.emotion // <--- Opslaan
-    });
+    setLoading(true);
+    setInlineError(null);
 
-    setShowSuccess(true);
-    setTimeout(() => {
-      onClose();
-    }, 1500);
+    try {
+      await addTrade({
+        pair: formData.pair.toUpperCase(),
+        direction: formData.direction,
+        entryPrice: parseFloat(formData.entryPrice),
+        stopLoss: parseFloat(formData.stopLoss),
+        takeProfit: formData.takeProfit ? parseFloat(formData.takeProfit) : undefined,
+        pnl: parseFloat(formData.pnl),
+        setup: formData.setup,
+        emotion: formData.emotion,
+        chartUrl: formData.chartUrl,
+        date: new Date().toISOString(), // Altijd datum van NU (vandaag)
+        rrRatio: calculations.rrRatio
+      });
+
+      setShowSuccess(true);
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (error: any) {
+      console.error("Fout bij opslaan:", error);
+      setInlineError(error.message || "Kon de trade niet opslaan. Controleer je verbinding.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-pip-card border border-pip-border w-full max-w-2xl rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden relative">
+      <div className="bg-pip-card border border-pip-border w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden relative">
         
         {showSuccess ? (
-          <div className="flex flex-col items-center justify-center p-12 space-y-4 text-center animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="w-20 h-20 bg-pip-green/20 rounded-full flex items-center justify-center text-pip-green mb-2">
+          <div className="flex flex-col items-center justify-center p-12 space-y-4 animate-in fade-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-pip-green/20 rounded-full flex items-center justify-center text-pip-green">
               <CheckCircle size={48} />
             </div>
-            <h3 className="text-2xl font-bold text-white">Trade Saved!</h3>
+            <h3 className="text-2xl font-bold text-white">Trade Vaulted</h3>
+            <p className="text-pip-muted text-sm">Vandaag opgeslagen in je PipVault.</p>
           </div>
         ) : (
           <>
             <div className="flex items-center justify-between p-6 border-b border-pip-border">
-              <h2 className="text-xl font-bold text-white">Log Trade</h2>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Calculator className="text-pip-gold" size={20} /> Log New Trade
+              </h2>
               <button onClick={onClose} className="text-pip-muted hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Rij 1: Pair & Direction (Dezelfde code als voorheen, maar ingekort voor leesbaarheid) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 space-y-5">
+              {inlineError && (
+                <div className="p-4 bg-pip-red/10 border border-pip-red/20 rounded-lg flex items-center gap-3 text-pip-red animate-in slide-in-from-top-2">
+                  <AlertCircle size={18} className="shrink-0" />
+                  <span className="text-sm font-medium">{inlineError}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-pip-muted">Pair *</label>
-                  <input name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className={`w-full bg-pip-dark border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-pip-gold uppercase ${errors.pair ? 'border-pip-red' : 'border-pip-border'}`} />
-                  {errors.pair && <p className="text-xs text-pip-red">{errors.pair}</p>}
+                  <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Pair</label>
+                  <input name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none uppercase" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-pip-muted">Direction</label>
+                  <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Direction</label>
                   <div className="grid grid-cols-2 gap-4">
-                    <button onClick={() => setFormData(prev => ({ ...prev, direction: 'LONG' }))} className={`py-2 rounded-lg font-bold border ${formData.direction === 'LONG' ? 'bg-pip-green/20 text-pip-green border-pip-green' : 'bg-pip-card text-pip-muted border-pip-border'}`}>LONG</button>
-                    <button onClick={() => setFormData(prev => ({ ...prev, direction: 'SHORT' }))} className={`py-2 rounded-lg font-bold border ${formData.direction === 'SHORT' ? 'bg-pip-red/20 text-pip-red border-pip-red' : 'bg-pip-card text-pip-muted border-pip-border'}`}>SHORT</button>
+                    <button onClick={() => setFormData(prev => ({ ...prev, direction: 'LONG' }))} className={`py-2 rounded-lg font-bold border transition-all ${formData.direction === 'LONG' ? 'bg-pip-green/20 text-pip-green border-pip-green' : 'bg-pip-dark text-pip-muted border-pip-border'}`}>LONG</button>
+                    <button onClick={() => setFormData(prev => ({ ...prev, direction: 'SHORT' }))} className={`py-2 rounded-lg font-bold border transition-all ${formData.direction === 'SHORT' ? 'bg-pip-red/20 text-pip-red border-pip-red' : 'bg-pip-dark text-pip-muted border-pip-border'}`}>SHORT</button>
                   </div>
                 </div>
               </div>
 
-              {/* Rij 2: Prijzen (Entry, SL, TP) */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-pip-muted">Entry *</label>
-                  <input name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className={`w-full bg-pip-dark border rounded-lg px-4 py-2 text-white ${errors.entryPrice ? 'border-pip-red' : 'border-pip-border'}`} />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase">Entry</label>
+                  <input name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-pip-muted">SL *</label>
-                  <input name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className={`w-full bg-pip-dark border rounded-lg px-4 py-2 text-white ${errors.stopLoss ? 'border-pip-red' : 'border-pip-border'}`} />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase">Stop Loss</label>
+                  <input name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-pip-muted">TP</label>
-                  <input name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white" />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase">Take Profit</label>
+                  <input name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
                 </div>
               </div>
 
-              {/* Rij 3: PnL + NIEUW: Setup & Emotion */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-pip-muted">Realized PnL *</label>
-                    <input name="pnl" value={formData.pnl} onChange={handleChange} type="number" placeholder="+/-" className={`w-full bg-pip-dark border rounded-lg px-4 py-2 text-white ${errors.pnl ? 'border-pip-red' : 'border-pip-border'} ${formData.pnl && parseFloat(formData.pnl) > 0 ? 'text-pip-green' : formData.pnl ? 'text-pip-red' : ''}`} />
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-pip-muted uppercase">Realized PnL (Pips)</label>
+                    <input name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
                  </div>
-
-                 {/* SETUP SELECTOR */}
-                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-pip-muted">Strategy / Setup</label>
-                    <select name="setup" value={formData.setup} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none">
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-pip-muted uppercase">Setup</label>
+                    <select name="setup" value={formData.setup} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white outline-none">
                         {SETUPS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                  </div>
-
-                 {/* EMOTION SELECTOR */}
-                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-pip-muted">Emotion</label>
-                    <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none">
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-pip-muted uppercase">Emotion</label>
+                    <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white outline-none">
                         {EMOTIONS.map(e => <option key={e} value={e}>{e}</option>)}
                     </select>
                  </div>
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-pip-muted">Chart URL</label>
-                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white" />
+                <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">TradingView Chart URL</label>
+                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none" />
+              </div>
+
+              <div className="p-3 bg-pip-dark/50 border border-pip-border rounded-lg flex justify-around text-center">
+                  <div><p className="text-[10px] text-pip-muted uppercase">Planned R:R</p><p className="font-bold text-pip-gold">{calculations.rrRatio}</p></div>
+                  <div><p className="text-[10px] text-pip-muted uppercase">Risk (Pips)</p><p className="font-bold text-white">{calculations.risk}</p></div>
+                  <div><p className="text-[10px] text-pip-muted uppercase">Reward (Pips)</p><p className="font-bold text-white">{calculations.reward}</p></div>
               </div>
             </div>
 
             <div className="p-6 border-t border-pip-border flex justify-end gap-3">
               <button onClick={onClose} className="px-4 py-2 text-pip-muted hover:text-white transition-colors">Cancel</button>
-              <button onClick={handleSave} className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-bold px-6 py-2 rounded-lg flex items-center gap-2 transition-transform active:scale-95"><Save size={18} /> Save</button>
+              <button 
+                onClick={handleSave} 
+                disabled={loading}
+                className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-8 py-2 rounded-lg flex items-center gap-2 transition-all disabled:opacity-50 active:scale-95 shadow-lg shadow-pip-gold/10"
+              >
+                {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                SAVE TRADE
+              </button>
             </div>
           </>
         )}
