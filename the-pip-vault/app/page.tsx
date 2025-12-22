@@ -1,12 +1,20 @@
-"use client"; 
+"use client";
 
 import { useMemo } from 'react';
 import { useTrades } from "@/context/TradeContext";
-import ProfitCard from '@/components/dashboard/ProfitsCard';
-import { Activity, BarChart2, DollarSign, TrendingUp } from "lucide-react";
+import ProfitsCard from "@/components/dashboard/ProfitsCard";
+import EquityChart from "@/components/dashboard/EquityChart"; // <--- Import
+import { generateDummyTrades } from "@/utils/demoData";       // <--- Import
+import { Activity, BarChart2, DollarSign, Database } from "lucide-react";
 
 export default function Home() {
-  const { trades } = useTrades();
+  const { trades, addTrade } = useTrades();
+
+  // === DEMO DATA LOADER ===
+  const handleLoadDemoData = () => {
+    const dummyData = generateDummyTrades(5); // Genereer 5 trades per klik
+    dummyData.forEach(trade => addTrade(trade));
+  };
 
   // === KPI LOGICA ===
   const stats = useMemo(() => {
@@ -16,28 +24,23 @@ export default function Home() {
     let totalPnL = 0;
 
     trades.forEach(trade => {
-      // Gebruik de handmatige PnL input
       totalPnL += trade.pnl;
-
       if (trade.pnl > 0) {
         grossProfit += trade.pnl;
         winCount++;
       } else if (trade.pnl < 0) {
-        // PnL is negatief (bijv -20), we willen de absolute waarde voor de 'Gross Loss' berekening
         grossLoss += Math.abs(trade.pnl);
       }
     });
 
     const totalTrades = trades.length;
     const winRate = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0;
-    
-    // Profit Factor: Bruto Winst / Bruto Verlies
     const profitFactor = grossLoss === 0 
       ? (grossProfit > 0 ? grossProfit : 0) 
       : grossProfit / grossLoss;
 
     return {
-      netPnL: parseFloat(totalPnL.toFixed(1)),
+      netPnL: parseFloat(totalPnL.toFixed(2)),
       winRate: Math.round(winRate),
       profitFactor: parseFloat(profitFactor.toFixed(2)),
       totalTrades
@@ -56,19 +59,29 @@ export default function Home() {
           </p>
         </div>
         
-        <div className="hidden sm:flex items-center gap-2 bg-pip-dark border border-pip-border px-4 py-2 rounded-full">
-           <Activity size={16} className="text-pip-gold" />
-           <span className="text-sm font-mono text-pip-muted">
-             {stats.totalTrades} Journaled Trades
-           </span>
+        <div className="flex items-center gap-3">
+            {/* TIJDELIJKE DEMO BUTTON */}
+            <button 
+                onClick={handleLoadDemoData}
+                className="flex items-center gap-2 bg-pip-dark hover:bg-pip-card border border-pip-border hover:border-pip-gold text-pip-muted hover:text-white px-3 py-2 rounded-lg text-xs transition-all"
+                title="Voegt 5 willekeurige trades toe"
+            >
+                <Database size={14} />
+                <span>Seed Data</span>
+            </button>
+
+            <div className="hidden sm:flex items-center gap-2 bg-pip-dark border border-pip-border px-4 py-2 rounded-full">
+                <Activity size={16} className="text-pip-gold" />
+                <span className="text-sm font-mono text-pip-muted">
+                    {stats.totalTrades} Trades
+                </span>
+            </div>
         </div>
       </div>
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* 1. Net PnL */}
-        <ProfitCard 
+        <ProfitsCard 
           title="Net PnL"
           value={`${stats.netPnL > 0 ? '+' : ''}${stats.netPnL}`}
           subValue="Total Result"
@@ -76,9 +89,7 @@ export default function Home() {
           trend={stats.netPnL >= 0 ? 'up' : 'down'}
           valueColor={stats.netPnL >= 0 ? 'text-pip-green' : 'text-pip-red'}
         />
-
-        {/* 2. Win Rate */}
-        <ProfitCard 
+        <ProfitsCard 
           title="Win Rate"
           value={`${stats.winRate}%`}
           subValue={`Based on ${stats.totalTrades} trades`}
@@ -86,9 +97,7 @@ export default function Home() {
           trend={stats.winRate >= 50 ? 'up' : 'down'}
           valueColor="text-white"
         />
-
-        {/* 3. Profit Factor */}
-        <ProfitCard 
+        <ProfitsCard 
           title="Profit Factor"
           value={stats.profitFactor}
           subValue="Target: > 1.5"
@@ -98,12 +107,9 @@ export default function Home() {
         />
       </div>
       
-      {/* Chart Placeholder */}
-      <div className="bg-pip-card border border-pip-border p-6 rounded-xl h-64 flex flex-col items-center justify-center text-pip-muted/50 border-dashed">
-        <TrendingUp size={48} className="mb-4 opacity-50" />
-        <span className="font-medium">Equity Curve Chart</span>
-        <span className="text-xs">Coming in US7</span>
-      </div>
+      {/* === EQUITY CHART COMPONENT === */}
+      <EquityChart trades={trades} />
+
     </div>
   );
 }
