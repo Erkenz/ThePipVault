@@ -1,11 +1,21 @@
 "use client";
 
 import { useTrades, Trade } from "@/context/TradeContext";
+import { LoadingCard } from "../ui/Loadingcard";
 import { Activity, Calendar, Trash2, ExternalLink, Hash, Maximize2, AlertTriangle, CheckCircle, XCircle, MinusCircle } from "lucide-react";
 
 const TradeList = () => {
-  const { trades, deleteTrade } = useTrades();
+  const { trades, deleteTrade, loading } = useTrades();
 
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-32 bg-pip-card border border-pip-border rounded-lg animate-pulse" />
+        ))}
+      </div>
+    );
+  }
   const sortedTrades = [...trades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   if (trades.length === 0) {
