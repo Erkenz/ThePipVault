@@ -14,12 +14,13 @@ export interface Trade {
   rrRatio: number;
   chartUrl: string;
   date: string;
+  pnl: number;
 }
 
 interface TradeContextType {
   trades: Trade[];
   addTrade: (trade: Omit<Trade, 'id' | 'date'>) => void;
-  deleteTrade: (id: string) => void; // <--- NIEUW
+  deleteTrade: (id: string) => void; 
 }
 
 const TradeContext = createContext<TradeContextType | undefined>(undefined);
