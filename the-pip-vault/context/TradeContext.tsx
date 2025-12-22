@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-// 1. Definitie van hoe een Trade eruit ziet
 export interface Trade {
   id: string;
   pair: string;
@@ -17,37 +16,37 @@ export interface Trade {
   date: string;
 }
 
-// 2. Definitie van wat onze Context aanbiedt
 interface TradeContextType {
   trades: Trade[];
   addTrade: (trade: Omit<Trade, 'id' | 'date'>) => void;
+  deleteTrade: (id: string) => void; // <--- NIEUW
 }
 
 const TradeContext = createContext<TradeContextType | undefined>(undefined);
 
-// 3. De Provider (De opslagcontainer)
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
 
   const addTrade = (newTradeData: Omit<Trade, 'id' | 'date'>) => {
     const newTrade: Trade = {
       ...newTradeData,
-      id: Math.random().toString(36).substr(2, 9), // Simpele unieke ID
+      id: Math.random().toString(36).substr(2, 9),
       date: new Date().toISOString(),
     };
+    setTrades((prev) => [newTrade, ...prev]);
+  };
 
-    setTrades((prev) => [newTrade, ...prev]); // Voeg toe bovenenaan de lijst
-    console.log("Trade toegevoegd aan tijdelijke lijst:", newTrade);
+  const deleteTrade = (id: string) => {
+    setTrades((prev) => prev.filter((trade) => trade.id !== id));
   };
 
   return (
-    <TradeContext.Provider value={{ trades, addTrade }}>
+    <TradeContext.Provider value={{ trades, addTrade, deleteTrade }}>
       {children}
     </TradeContext.Provider>
   );
 };
 
-// 4. Een simpele hook om de data te gebruiken
 export const useTrades = () => {
   const context = useContext(TradeContext);
   if (!context) {
