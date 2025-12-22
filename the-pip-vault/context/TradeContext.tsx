@@ -14,12 +14,14 @@ export interface Trade {
   rrRatio: number;
   chartUrl: string;
   date: string;
-  pnl: number; 
+  pnl: number;
+  setup?: string;   
+  emotion?: string; 
 }
 
 interface TradeContextType {
   trades: Trade[];
-  // Update: date is nu optioneel in de input
+  // Update type: setup en emotion zijn optioneel
   addTrade: (trade: Omit<Trade, 'id' | 'date'> & { date?: string }) => void;
   deleteTrade: (id: string) => void;
 }
@@ -29,13 +31,14 @@ const TradeContext = createContext<TradeContextType | undefined>(undefined);
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
 
-  // Update: We kijken of er een datum in 'newTradeData' zit
   const addTrade = (newTradeData: Omit<Trade, 'id' | 'date'> & { date?: string }) => {
     const newTrade: Trade = {
       ...newTradeData,
       id: Math.random().toString(36).substr(2, 9),
-      // Als er een datum is meegegeven (demo data), gebruik die. Anders: nu.
       date: newTradeData.date || new Date().toISOString(),
+      // Defaults als ze leeg zijn
+      setup: newTradeData.setup || 'Unknown',
+      emotion: newTradeData.emotion || 'Neutral'
     };
     setTrades((prev) => [newTrade, ...prev]);
   };

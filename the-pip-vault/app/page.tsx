@@ -2,17 +2,20 @@
 
 import { useMemo } from 'react';
 import { useTrades } from "@/context/TradeContext";
-import ProfitsCard from "@/components/dashboard/ProfitsCard";
-import EquityChart from "@/components/dashboard/EquityChart"; // <--- Import
-import { generateDummyTrades } from "@/utils/demoData";       // <--- Import
-import { Activity, BarChart2, DollarSign, Database } from "lucide-react";
+import ProfitCard from '@/components/dashboard/ProfitsCard';
+import EquityChart from "@/components/dashboard/EquityChart"; 
+import SetupBreakdown from '@/components/dashboard/SetupBreakdown';
+import EmotionAnalysis from '@/components/dashboard/EmotionAnalysis';
+import CalendarHeatmap from '@/components/dashboard/TradingCalendar';
+import { generateDummyTrades } from "@/utils/demoData";       
+import { Activity, BarChart2, DollarSign, Database, PieChart } from "lucide-react";
 
 export default function Home() {
   const { trades, addTrade } = useTrades();
 
   // === DEMO DATA LOADER ===
   const handleLoadDemoData = () => {
-    const dummyData = generateDummyTrades(5); // Genereer 5 trades per klik
+    const dummyData = generateDummyTrades(5); 
     dummyData.forEach(trade => addTrade(trade));
   };
 
@@ -48,23 +51,22 @@ export default function Home() {
   }, [trades]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       
       {/* Header section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-pip-text">Dashboard</h1>
           <p className="text-pip-muted text-sm mt-1">
-            Performance Overview
+            Performance Command Center
           </p>
         </div>
         
         <div className="flex items-center gap-3">
-            {/* TIJDELIJKE DEMO BUTTON */}
+            {/* Seed Data Button */}
             <button 
                 onClick={handleLoadDemoData}
                 className="flex items-center gap-2 bg-pip-dark hover:bg-pip-card border border-pip-border hover:border-pip-gold text-pip-muted hover:text-white px-3 py-2 rounded-lg text-xs transition-all"
-                title="Voegt 5 willekeurige trades toe"
             >
                 <Database size={14} />
                 <span>Seed Data</span>
@@ -81,15 +83,15 @@ export default function Home() {
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ProfitsCard 
+        <ProfitCard 
           title="Net PnL"
           value={`${stats.netPnL > 0 ? '+' : ''}${stats.netPnL}`}
-          subValue="Total Result"
+          subValue="Total Pips"
           icon={DollarSign}
           trend={stats.netPnL >= 0 ? 'up' : 'down'}
           valueColor={stats.netPnL >= 0 ? 'text-pip-green' : 'text-pip-red'}
         />
-        <ProfitsCard 
+        <ProfitCard 
           title="Win Rate"
           value={`${stats.winRate}%`}
           subValue={`Based on ${stats.totalTrades} trades`}
@@ -97,7 +99,7 @@ export default function Home() {
           trend={stats.winRate >= 50 ? 'up' : 'down'}
           valueColor="text-white"
         />
-        <ProfitsCard 
+        <ProfitCard 
           title="Profit Factor"
           value={stats.profitFactor}
           subValue="Target: > 1.5"
@@ -107,8 +109,27 @@ export default function Home() {
         />
       </div>
       
-      {/* === EQUITY CHART COMPONENT === */}
+      {/* === EQUITY CHART === */}
       <EquityChart trades={trades} />
+
+      {/* === ANALYTICS SECTION === */}
+      {trades.length > 0 && (
+        <div className="pt-6 border-t border-pip-border space-y-6 animate-in slide-in-from-bottom-4 duration-700 delay-100">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <PieChart size={20} className="text-pip-gold"/>
+                Analytics Overview
+            </h2>
+            
+            {/* Heatmap Full Width */}
+            <CalendarHeatmap trades={trades} />
+
+            {/* Split View: Setups & Emotions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <SetupBreakdown trades={trades} />
+                <EmotionAnalysis trades={trades} />
+            </div>
+        </div>
+      )}
 
     </div>
   );

@@ -22,7 +22,7 @@ const Navbar = () => {
                 <span className="text-pip-dark font-bold text-lg">P</span>
               </div>
               <Link href="/" className="text-xl font-bold tracking-wider text-white">
-                THE <span className="text-pip-gold">PIPLAB</span>
+                THE <span className="text-pip-gold">PIPVAULT</span>
               </Link>
             </div>
 
