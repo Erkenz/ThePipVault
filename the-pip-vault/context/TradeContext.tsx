@@ -13,6 +13,7 @@ export interface Trade {
   stopLoss: number;
   takeProfit?: number;
   pnl: number;
+  session: string;
   setup?: string;
   emotion?: string;
   chartUrl?: string;

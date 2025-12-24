@@ -2,7 +2,7 @@
 
 import { useTrades, Trade } from "@/context/TradeContext";
 import { LoadingCard } from "../ui/Loadingcard";
-import { Activity, Calendar, Trash2, ExternalLink, Hash, Maximize2, AlertTriangle, CheckCircle, XCircle, MinusCircle } from "lucide-react";
+import { Activity, Calendar, Trash2, ExternalLink, Hash, Maximize2, AlertTriangle, CheckCircle, XCircle, MinusCircle, Clock } from "lucide-react";
 
 const TradeList = () => {
   const { trades, deleteTrade, loading } = useTrades();
@@ -113,6 +113,15 @@ const TradeCard = ({ trade, onDelete }: { trade: Trade; onDelete: (id: string) =
                         <span>{trade.setup}</span>
                     </div>
                 )}
+                
+                {/* SESSION BADGE - NEW */}
+                {trade.session && (
+                    <div className="flex items-center gap-1.5 text-xs text-pip-muted bg-pip-dark px-2 py-1 rounded border border-pip-border/50">
+                        <Clock size={12} className="text-pip-gold" />
+                        <span>{trade.session} Session</span>
+                    </div>
+                )}
+
                 <div className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded border ${emotionConfig.style}`}>
                     <EmotionIcon size={12} strokeWidth={2.5} />
                     <span className="font-medium">{trade.emotion || 'Neutral'}</span>
