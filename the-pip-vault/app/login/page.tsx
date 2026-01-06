@@ -3,33 +3,34 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { LogIn, Loader2, ShieldCheck, Lock, TrendingUp, AlertCircle } from 'lucide-react';
+import { LogIn, Loader2, TrendingUp, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  
+
   // Inline validatie states
-  const [errors, setErrors] = useState<{email?: string, password?: string}>({});
-  const [touched, setTouched] = useState<{email?: boolean, password?: boolean}>({});
+  const [errors, setErrors] = useState<{ email?: string, password?: string }>({});
+  const [touched, setTouched] = useState<{ email?: boolean, password?: boolean }>({});
 
   const router = useRouter();
   const supabase = createClient();
 
   // Effect voor real-time validatie
   useEffect(() => {
-    const newErrors: {email?: string, password?: string} = {};
-    
+    const newErrors: { email?: string, password?: string } = {};
+
     // Email validatie
     if (email && !/^\S+@\S+\.\S+$/.test(email)) {
-      newErrors.email = "Voer een geldig e-mailadres in.";
+      newErrors.email = "Please enter a valid email address.";
     }
 
     // Wachtwoord validatie
     if (password && password.length < 6) {
-      newErrors.password = "Wachtwoord moet minimaal 6 tekens bevatten.";
+      newErrors.password = "Password must be at least 6 characters.";
     }
 
     setErrors(newErrors);
@@ -37,7 +38,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Markeer alles als 'touched' bij submit poging
     setTouched({ email: true, password: true });
 
@@ -53,7 +54,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setServerError("Inloggen mislukt. Controleer je gegevens.");
+      setServerError("Login failed. Please check your credentials.");
       setLoading(false);
     } else {
       router.push('/');
@@ -63,7 +64,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-pip-dark">
-      
+
       {/* Linker Kant: Branding */}
       <div className="hidden lg:flex flex-col justify-between p-12 bg-linear-to-br from-pip-dark via-pip-dark to-pip-gold/10 border-r border-pip-border">
         <div className="flex items-center gap-2">
@@ -75,11 +76,11 @@ export default function LoginPage() {
 
         <div className="space-y-6">
           <h2 className="text-5xl font-bold text-white leading-tight">
-            Beveilig je trades.<br />
-            <span className="text-pip-gold text-4xl">Optimaliseer je edge.</span>
+            Secure your trades.<br />
+            <span className="text-pip-gold text-4xl">Optimize your edge.</span>
           </h2>
           <p className="text-pip-muted max-w-md text-lg">
-            De enige plek waar data, emotie en strategie samenkomen om van jou een consistente trader te maken.
+            The only place where data, emotion, and strategy come together to make you a consistent trader.
           </p>
         </div>
 
@@ -91,25 +92,23 @@ export default function LoginPage() {
       {/* Rechter Kant: Formulier */}
       <div className="flex items-center justify-center p-6 sm:p-12 relative overflow-hidden">
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-pip-gold/5 rounded-full blur-[100px]" />
-        
+
         <div className="w-full max-w-100 space-y-8 relative z-10">
           <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-white">Welkom terug</h3>
-            <p className="text-pip-muted">Voer je gegevens in om toegang te krijgen tot je kluis.</p>
+            <h3 className="text-2xl font-bold text-white">Welcome Back</h3>
+            <p className="text-pip-muted">Enter your details to access your vault.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             {/* Email Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-pip-muted uppercase tracking-wider">Email</label>
-              <input 
-                type="email" 
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Email</label>
+              <input
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onBlur={() => setTouched(prev => ({...prev, email: true}))}
-                className={`w-full bg-pip-card/50 border rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-pip-muted/30
-                  ${touched.email && errors.email ? 'border-pip-red' : 'border-pip-border focus:border-pip-gold focus:ring-1 focus:ring-pip-gold'}
-                `}
+                onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
+                className={`w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 ${touched.email && errors.email ? '!border-pip-red' : ''}`}
                 placeholder="trader@piplab.com"
               />
               {touched.email && errors.email && (
@@ -120,18 +119,16 @@ export default function LoginPage() {
             </div>
 
             {/* Password Input */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <label className="text-sm font-semibold text-pip-muted uppercase tracking-wider">Wachtwoord</label>
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Password</label>
               </div>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onBlur={() => setTouched(prev => ({...prev, password: true}))}
-                className={`w-full bg-pip-card/50 border rounded-xl px-4 py-3 text-white outline-none transition-all placeholder:text-pip-muted/30
-                  ${touched.password && errors.password ? 'border-pip-red' : 'border-pip-border focus:border-pip-gold focus:ring-1 focus:ring-pip-gold'}
-                `}
+                onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
+                className={`w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 ${touched.password && errors.password ? '!border-pip-red' : ''}`}
                 placeholder="••••••••"
               />
               {touched.password && errors.password && (
@@ -149,16 +146,16 @@ export default function LoginPage() {
               </div>
             )}
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading || (touched.email && !!errors.email) || (touched.password && !!errors.password)}
-              className="w-full bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] shadow-[0_10px_20px_rgba(212,175,55,0.15)]"
+              className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-pip-gold/10 w-full"
             >
               {loading ? (
                 <Loader2 className="animate-spin" size={20} />
               ) : (
                 <>
-                  <span>TOEGANG KRIJGEN</span>
+                  <span>LOGIN</span>
                   <LogIn size={20} />
                 </>
               )}
@@ -166,7 +163,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-pip-muted text-sm">
-            Nog geen account? <button className="text-pip-gold font-bold hover:underline">Vraag toegang aan</button>
+            Don't have an account yet? <Link href="/register" className="text-pip-gold font-bold hover:underline">Register Here</Link>
           </p>
         </div>
       </div>

@@ -1,21 +1,24 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { X, Save, CheckCircle, Loader2, Calculator, AlertCircle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, Save, CheckCircle, Loader2, Calculator, AlertCircle, Clock } from 'lucide-react';
 import { useTrades } from '@/context/TradeContext';
+import { useProfile } from '@/context/ProfileContext';
 
 interface AddTradeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const SETUPS = ['Trend Continuation', 'Breakout', 'Reversal', 'Range Bounce', 'News Event'];
 const EMOTIONS = ['Confident', 'Neutral', 'FOMO', 'Greedy', 'Hesitant', 'Revenge'];
 
 const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
   const { addTrade } = useTrades();
+  const { profile } = useProfile();
 
   // States
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -28,8 +31,10 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     takeProfit: '',
     chartUrl: '',
     pnl: '',
+    pnlCurrency: '',
     setup: 'Trend Continuation',
     emotion: 'Neutral',
+    session: '',
   });
 
   const [calculations, setCalculations] = useState({
@@ -38,8 +43,9 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     rrRatio: 0
   });
 
-  // Reset form bij openen/sluiten
+  // Reset form bij openen/sluiten en zet standaard sessie
   useEffect(() => {
+    setMounted(true);
     if (!isOpen) {
       setFormData({
         pair: '',
@@ -49,14 +55,19 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
         takeProfit: '',
         chartUrl: '',
         pnl: '',
+        pnlCurrency: '',
         setup: 'Trend Continuation',
         emotion: 'Neutral',
+        session: profile.sessions[0] || '', // Use first available session
       });
       setShowSuccess(false);
       setLoading(false);
       setInlineError(null);
+    } else {
+      // Ensure session is set when modal opens
+      setFormData(prev => ({ ...prev, session: profile.sessions[0] || '' }));
     }
-  }, [isOpen]);
+  }, [isOpen, profile.sessions]);
 
   // Automatische RR Calculaties
   useEffect(() => {
@@ -67,7 +78,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     if (!isNaN(entry) && !isNaN(sl)) {
       const riskVal = Math.abs(entry - sl);
       const rewardVal = !isNaN(tp) ? Math.abs(tp - entry) : 0;
-      
+
       const isJPY = formData.pair.toUpperCase().includes('JPY');
       const multiplier = isJPY ? 100 : 10000;
 
@@ -82,12 +93,12 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (inlineError) setInlineError(null); 
+    if (inlineError) setInlineError(null);
   };
 
   const handleSave = async () => {
-    if (!formData.pair || !formData.entryPrice || !formData.pnl) {
-      setInlineError("Vul de verplichte velden in: Pair, Entry en PnL.");
+    if (!formData.pair || !formData.entryPrice || !formData.pnl || !formData.session) {
+      setInlineError("Please fill in required fields: Pair, Entry, PnL, and Session.");
       return;
     }
 
@@ -102,10 +113,12 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
         stopLoss: parseFloat(formData.stopLoss),
         takeProfit: formData.takeProfit ? parseFloat(formData.takeProfit) : undefined,
         pnl: parseFloat(formData.pnl),
+        pnl_currency: formData.pnlCurrency ? parseFloat(formData.pnlCurrency) : undefined,
         setup: formData.setup,
         emotion: formData.emotion,
+        session: formData.session,
         chartUrl: formData.chartUrl,
-        date: new Date().toISOString(), // Altijd datum van NU (vandaag)
+        date: new Date().toISOString(),
         rrRatio: calculations.rrRatio
       });
 
@@ -115,25 +128,25 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
       }, 1500);
     } catch (error: any) {
       console.error("Fout bij opslaan:", error);
-      setInlineError(error.message || "Kon de trade niet opslaan. Controleer je verbinding.");
+      setInlineError(error.message || "Could not save trade. Please check your connection.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-pip-card border border-pip-border w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden relative">
-        
+
         {showSuccess ? (
           <div className="flex flex-col items-center justify-center p-12 space-y-4 animate-in fade-in zoom-in-95 duration-300">
             <div className="w-20 h-20 bg-pip-green/20 rounded-full flex items-center justify-center text-pip-green">
               <CheckCircle size={48} />
             </div>
             <h3 className="text-2xl font-bold text-white">Trade Vaulted</h3>
-            <p className="text-pip-muted text-sm">Vandaag opgeslagen in je PipVault.</p>
+            <p className="text-pip-muted text-sm">Saved securely to your PipVault.</p>
           </div>
         ) : (
           <>
@@ -146,7 +159,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-5 overflow-y-auto max-h-[80vh]">
               {inlineError && (
                 <div className="p-4 bg-pip-red/10 border border-pip-red/20 rounded-lg flex items-center gap-3 text-pip-red animate-in slide-in-from-top-2">
                   <AlertCircle size={18} className="shrink-0" />
@@ -155,9 +168,9 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Pair</label>
-                  <input name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none uppercase" />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Pair</label>
+                  <input name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 uppercase" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Direction</label>
@@ -168,58 +181,91 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Entry</label>
-                  <input name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Stop Loss</label>
-                  <input name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Take Profit</label>
-                  <input name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+              {/* SESSIE SELECTIE - NIEUWE SECTIE */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block flex items-center gap-2">
+                  <Clock size={14} /> Trading Session
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {profile.sessions.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, session: s })}
+                      className={`py-2 rounded-lg font-bold border transition-all text-xs ${formData.session === s
+                        ? 'bg-pip-gold/20 text-pip-gold border-pip-gold'
+                        : 'bg-pip-dark text-pip-muted border-pip-border hover:border-white/10'
+                        }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                 <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-pip-muted uppercase">Realized PnL (Pips)</label>
-                    <input name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
-                 </div>
-                 <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-pip-muted uppercase">Setup</label>
-                    <select name="setup" value={formData.setup} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white outline-none">
-                        {SETUPS.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                 </div>
-                 <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-pip-muted uppercase">Emotion</label>
-                    <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white outline-none">
-                        {EMOTIONS.map(e => <option key={e} value={e}>{e}</option>)}
-                    </select>
-                 </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Entry</label>
+                  <input name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Stop Loss</label>
+                  <input name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Take Profit</label>
+                  <input name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">TradingView Chart URL</label>
-                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none" />
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL (Pips)</label>
+                  <input name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL ($)</label>
+                  <input name="pnlCurrency" value={formData.pnlCurrency} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Setup</label>
+                  <select
+                    name="setup"
+                    value={formData.setup}
+                    onChange={handleChange}
+                    className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
+                  >
+                    {profile.strategies.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Emotion</label>
+                  <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30">
+                    {EMOTIONS.map(e => <option key={e} value={e}>{e}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">TradingView Chart URL</label>
+                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
               </div>
 
               <div className="p-3 bg-pip-dark/50 border border-pip-border rounded-lg flex justify-around text-center">
-                  <div><p className="text-[10px] text-pip-muted uppercase">Planned R:R</p><p className="font-bold text-pip-gold">{calculations.rrRatio}</p></div>
-                  <div><p className="text-[10px] text-pip-muted uppercase">Risk (Pips)</p><p className="font-bold text-white">{calculations.risk}</p></div>
-                  <div><p className="text-[10px] text-pip-muted uppercase">Reward (Pips)</p><p className="font-bold text-white">{calculations.reward}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Planned R:R</p><p className="font-bold text-pip-gold">{calculations.rrRatio}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Risk (Pips)</p><p className="font-bold text-white">{calculations.risk}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Reward (Pips)</p><p className="font-bold text-white">{calculations.reward}</p></div>
               </div>
             </div>
 
             <div className="p-6 border-t border-pip-border flex justify-end gap-3">
               <button onClick={onClose} className="px-4 py-2 text-pip-muted hover:text-white transition-colors">Cancel</button>
-              <button 
-                onClick={handleSave} 
+              <button
+                onClick={handleSave}
                 disabled={loading}
-                className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-8 py-2 rounded-lg flex items-center gap-2 transition-all disabled:opacity-50 active:scale-95 shadow-lg shadow-pip-gold/10"
+                className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-pip-gold/10"
               >
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                 SAVE TRADE
@@ -228,7 +274,8 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
