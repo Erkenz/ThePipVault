@@ -18,6 +18,7 @@ export interface Trade {
   emotion?: string;
   chartUrl?: string;
   rrRatio?: number;
+  pnl_currency?: number;
 }
 
 interface TradeContextType {
@@ -38,10 +39,10 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const fetchTrades = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Controleer eerst of er een user is
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         setTrades([]);
         setLoading(false);
@@ -56,12 +57,21 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       const mappedTrades: Trade[] = (data || []).map(t => ({
-        ...t,
+        id: t.id,
+        user_id: t.user_id,
+        date: t.date,
+        pair: t.pair,
+        direction: t.direction,
         entryPrice: Number(t.entry_price),
         stopLoss: Number(t.stop_loss),
-        takeProfit: Number(t.take_profit),
+        takeProfit: t.take_profit ? Number(t.take_profit) : undefined,
+        pnl: Number(t.pnl),
+        pnl_currency: t.pnl_currency ? Number(t.pnl_currency) : undefined,
+        session: t.session,
+        setup: t.setup,
+        emotion: t.emotion,
         chartUrl: t.chart_url,
-        rrRatio: Number(t.rr_ratio)
+        rrRatio: t.rr_ratio ? Number(t.rr_ratio) : undefined,
       }));
 
       setTrades(mappedTrades);
@@ -109,7 +119,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         setup: newTradeData.setup,
         emotion: newTradeData.emotion,
         chart_url: newTradeData.chartUrl,
-        rr_ratio: newTradeData.rrRatio
+        rr_ratio: newTradeData.rrRatio,
+        pnl_currency: newTradeData.pnl_currency
       };
 
       const { data, error } = await supabase
@@ -131,13 +142,14 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         stopLoss: Number(savedTradeRaw.stop_loss),
         takeProfit: Number(savedTradeRaw.take_profit),
         chartUrl: savedTradeRaw.chart_url,
-        rrRatio: Number(savedTradeRaw.rr_ratio)
+        rrRatio: Number(savedTradeRaw.rr_ratio),
+        pnl_currency: Number(savedTradeRaw.pnl_currency)
       };
 
       setTrades((prev) => [savedTrade, ...prev]);
     } catch (err: any) {
       console.error("Fout bij toevoegen trade:", err.message || err);
-      throw err; 
+      throw err;
     }
   };
 

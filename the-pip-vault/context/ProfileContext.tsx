@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { createClient } from '@/utils/supabase/client';
 
 interface Profile {
+  first_name?: string;
+  last_name?: string;
   starting_equity: number;
   currency: string;
   sessions: string[];
@@ -23,6 +25,8 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile>({
+    first_name: '',
+    last_name: '',
     starting_equity: 10000,
     currency: 'USD',
     sessions: ['London', 'New York', 'Asia'],
@@ -45,6 +49,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (data) {
         setProfile({
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
           starting_equity: Number(data.starting_equity),
           currency: data.currency,
           sessions: data.sessions || [],
@@ -88,11 +94,13 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     if (!user) return;
     const { error } = await supabase.from('trades').delete().eq('user_id', user.id);
     if (error) throw error;
-    window.location.reload(); 
+    window.location.reload();
   };
 
   const resetSettingsOnly = async () => {
     await updateProfile({
+      first_name: '',
+      last_name: '',
       starting_equity: 10000,
       currency: 'USD',
       sessions: ['London', 'New York', 'Asia']
@@ -109,13 +117,13 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   return (
-    <ProfileContext.Provider value={{ 
-      profile, 
-      updateProfile, 
-      resetTradesOnly, 
-      resetSettingsOnly, 
-      resetFullAccount, 
-      loading 
+    <ProfileContext.Provider value={{
+      profile,
+      updateProfile,
+      resetTradesOnly,
+      resetSettingsOnly,
+      resetFullAccount,
+      loading
     }}>
       {children}
     </ProfileContext.Provider>

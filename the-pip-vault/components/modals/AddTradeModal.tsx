@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, CheckCircle, Loader2, Calculator, AlertCircle, Clock } from 'lucide-react';
 import { useTrades } from '@/context/TradeContext';
 import { useProfile } from '@/context/ProfileContext';
@@ -17,6 +18,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
   const { profile } = useProfile();
 
   // States
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -29,6 +31,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     takeProfit: '',
     chartUrl: '',
     pnl: '',
+    pnlCurrency: '',
     setup: 'Trend Continuation',
     emotion: 'Neutral',
     session: '',
@@ -42,6 +45,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
 
   // Reset form bij openen/sluiten en zet standaard sessie
   useEffect(() => {
+    setMounted(true);
     if (!isOpen) {
       setFormData({
         pair: '',
@@ -51,15 +55,16 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
         takeProfit: '',
         chartUrl: '',
         pnl: '',
+        pnlCurrency: '',
         setup: 'Trend Continuation',
         emotion: 'Neutral',
-        session: profile.sessions[0] || '', // Pak de eerste beschikbare sessie uit settings
+        session: profile.sessions[0] || '', // Use first available session
       });
       setShowSuccess(false);
       setLoading(false);
       setInlineError(null);
     } else {
-      // Zorg dat de sessie gevuld is als de modal opent
+      // Ensure session is set when modal opens
       setFormData(prev => ({ ...prev, session: profile.sessions[0] || '' }));
     }
   }, [isOpen, profile.sessions]);
@@ -93,7 +98,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
 
   const handleSave = async () => {
     if (!formData.pair || !formData.entryPrice || !formData.pnl || !formData.session) {
-      setInlineError("Vul de verplichte velden in: Pair, Entry, PnL en Session.");
+      setInlineError("Please fill in required fields: Pair, Entry, PnL, and Session.");
       return;
     }
 
@@ -108,9 +113,10 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
         stopLoss: parseFloat(formData.stopLoss),
         takeProfit: formData.takeProfit ? parseFloat(formData.takeProfit) : undefined,
         pnl: parseFloat(formData.pnl),
+        pnl_currency: formData.pnlCurrency ? parseFloat(formData.pnlCurrency) : undefined,
         setup: formData.setup,
         emotion: formData.emotion,
-        session: formData.session, // Sessie meesturen naar DB
+        session: formData.session,
         chartUrl: formData.chartUrl,
         date: new Date().toISOString(),
         rrRatio: calculations.rrRatio
@@ -122,15 +128,15 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
       }, 1500);
     } catch (error: any) {
       console.error("Fout bij opslaan:", error);
-      setInlineError(error.message || "Kon de trade niet opslaan. Controleer je verbinding.");
+      setInlineError(error.message || "Could not save trade. Please check your connection.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-pip-card border border-pip-border w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden relative">
 
@@ -140,7 +146,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
               <CheckCircle size={48} />
             </div>
             <h3 className="text-2xl font-bold text-white">Trade Vaulted</h3>
-            <p className="text-pip-muted text-sm">Vandaag opgeslagen in je PipVault.</p>
+            <p className="text-pip-muted text-sm">Saved securely to your PipVault.</p>
           </div>
         ) : (
           <>
@@ -162,9 +168,9 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Pair</label>
-                  <input name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none uppercase" />
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Pair</label>
+                  <input name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 uppercase" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Direction</label>
@@ -177,7 +183,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
 
               {/* SESSIE SELECTIE - NIEUWE SECTIE */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-pip-muted uppercase tracking-wider flex items-center gap-2">
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block flex items-center gap-2">
                   <Clock size={14} /> Trading Session
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -187,8 +193,8 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
                       type="button"
                       onClick={() => setFormData({ ...formData, session: s })}
                       className={`py-2 rounded-lg font-bold border transition-all text-xs ${formData.session === s
-                          ? 'bg-pip-gold/20 text-pip-gold border-pip-gold'
-                          : 'bg-pip-dark text-pip-muted border-pip-border hover:border-white/10'
+                        ? 'bg-pip-gold/20 text-pip-gold border-pip-gold'
+                        : 'bg-pip-dark text-pip-muted border-pip-border hover:border-white/10'
                         }`}
                     >
                       {s}
@@ -199,31 +205,35 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Entry</label>
-                  <input name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Entry</label>
+                  <input name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Stop Loss</label>
-                  <input name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Stop Loss</label>
+                  <input name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Take Profit</label>
-                  <input name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Take Profit</label>
+                  <input name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Realized PnL (Pips)</label>
-                  <input name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL (Pips)</label>
+                  <input name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Setup</label>
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL ($)</label>
+                  <input name="pnlCurrency" value={formData.pnlCurrency} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Setup</label>
                   <select
                     name="setup"
                     value={formData.setup}
                     onChange={handleChange}
-                    className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white outline-none"
+                    className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
                   >
                     {profile.strategies.map(s => (
                       <option key={s} value={s}>{s}</option>
@@ -231,16 +241,16 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Emotion</label>
-                  <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white outline-none">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Emotion</label>
+                  <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30">
                     {EMOTIONS.map(e => <option key={e} value={e}>{e}</option>)}
                   </select>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">TradingView Chart URL</label>
-                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none" />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">TradingView Chart URL</label>
+                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
               </div>
 
               <div className="p-3 bg-pip-dark/50 border border-pip-border rounded-lg flex justify-around text-center">
@@ -255,7 +265,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-8 py-2 rounded-lg flex items-center gap-2 transition-all disabled:opacity-50 active:scale-95 shadow-lg shadow-pip-gold/10"
+                className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-pip-gold/10"
               >
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                 SAVE TRADE
@@ -264,7 +274,8 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
