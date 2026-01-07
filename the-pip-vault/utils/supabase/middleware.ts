@@ -14,7 +14,7 @@ export const updateSession = async (request: NextRequest) => {
 
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON!,
             {
                 cookies: {
                     getAll() {
@@ -40,13 +40,10 @@ export const updateSession = async (request: NextRequest) => {
         const { data: { user } } = await supabase.auth.getUser();
 
         // protected routes
-        if (request.nextUrl.pathname.startsWith("/dashboard") || request.nextUrl.pathname.startsWith("/journal") || request.nextUrl.pathname.startsWith("/account")) {
-            if (!user) {
-                return NextResponse.redirect(new URL("/login", request.url));
-            }
-        }
+        const protectedPaths = ["/dashboard", "/journal", "/account", "/settings"];
+        const isProtected = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path));
 
-        if (request.nextUrl.pathname === "/" && !user) {
+        if ((isProtected || request.nextUrl.pathname === "/") && !user) {
             return NextResponse.redirect(new URL("/login", request.url));
         }
 
