@@ -10,6 +10,7 @@ interface Profile {
   currency: string;
   sessions: string[];
   strategies: string[];
+  asset_class: 'forex' | 'futures';
 }
 
 interface ProfileContextType {
@@ -30,7 +31,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     starting_equity: 10000,
     currency: 'USD',
     sessions: ['London', 'New York', 'Asia'],
-    strategies: ['Trend Continuation', 'Breakout', 'Reversal']
+    strategies: ['Trend Continuation', 'Breakout', 'Reversal'],
+    asset_class: 'forex'
   });
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -54,7 +56,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
           starting_equity: Number(data.starting_equity),
           currency: data.currency,
           sessions: data.sessions || [],
-          strategies: data.strategies || ['Trend Continuation', 'Breakout', 'Reversal']
+          strategies: data.strategies || ['Trend Continuation', 'Breakout', 'Reversal'],
+          asset_class: data.asset_class || 'forex'
         });
       }
     } catch (err) {
@@ -103,7 +106,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       last_name: '',
       starting_equity: 10000,
       currency: 'USD',
-      sessions: ['London', 'New York', 'Asia']
+      sessions: ['London', 'New York', 'Asia'],
+      asset_class: 'forex'
     });
   };
 

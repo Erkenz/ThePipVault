@@ -39,6 +39,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
     emotion: 'Neutral',
     session: '',
     comment: '',
+    assetType: 'forex' as 'forex' | 'futures', // Local state for asset type
   });
 
   const [calculations, setCalculations] = useState({
@@ -47,7 +48,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
     rrRatio: 0
   });
 
-  // Reset form bij openen/sluiten en zet standaard sessie
+  // Reset form bij openen/sluiten en zet standaard sessie + asset class
   useEffect(() => {
     setMounted(true);
     if (!isOpen) {
@@ -64,6 +65,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         emotion: 'Neutral',
         session: profile.sessions[0] || '',
         comment: '',
+        assetType: profile.asset_class || 'forex', // Default to profile setting
       });
       setShowSuccess(false);
       setLoading(false);
@@ -83,12 +85,17 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         emotion: tradeToEdit.emotion || 'Neutral',
         session: tradeToEdit.session || profile.sessions[0] || '',
         comment: tradeToEdit.comment || '',
+        assetType: tradeToEdit.asset_type || profile.asset_class || 'forex',
       });
     } else {
-      // Ensure session is set when modal opens for new trade
-      setFormData(prev => ({ ...prev, session: profile.sessions[0] || '' }));
+      // Ensure session and assetType are set when modal opens for new trade
+      setFormData(prev => ({
+        ...prev,
+        session: profile.sessions[0] || '',
+        assetType: profile.asset_class || 'forex'
+      }));
     }
-  }, [isOpen, profile.sessions, tradeToEdit]);
+  }, [isOpen, profile.sessions, profile.asset_class, tradeToEdit]);
 
   // Automatische RR Calculaties
   useEffect(() => {
@@ -101,7 +108,13 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
       const rewardVal = !isNaN(tp) ? Math.abs(tp - entry) : 0;
 
       const isJPY = formData.pair.toUpperCase().includes('JPY');
-      const multiplier = isJPY ? 100 : 10000;
+
+      let multiplier = 10000;
+      if (formData.assetType === 'futures') {
+        multiplier = 1; // 1 Point = 1.00 price difference (standard for indices)
+      } else if (isJPY) {
+        multiplier = 100;
+      }
 
       setCalculations({
         risk: parseFloat((riskVal * multiplier).toFixed(1)),
@@ -141,6 +154,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         chartUrl: formData.chartUrl,
         rrRatio: calculations.rrRatio,
         comment: formData.comment,
+        asset_type: formData.assetType,
       };
 
       if (tradeToEdit) {
@@ -197,7 +211,29 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
                 </div>
               )}
 
+              {/* ASSET TYPE TOGGLE */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Asset Type</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, assetType: 'forex' }))}
+                    className={`flex-1 py-2 rounded-lg font-bold border transition-all text-xs ${formData.assetType === 'forex' ? 'bg-pip-gold/20 text-pip-gold border-pip-gold' : 'bg-pip-dark text-pip-muted border-pip-border'}`}
+                  >
+                    FOREX
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, assetType: 'futures' }))}
+                    className={`flex-1 py-2 rounded-lg font-bold border transition-all text-xs ${formData.assetType === 'futures' ? 'bg-pip-gold/20 text-pip-gold border-pip-gold' : 'bg-pip-dark text-pip-muted border-pip-border'}`}
+                  >
+                    FUTURES / INDICES
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* ... Pair and Direction ... */}
                 <div className="space-y-1">
                   <label htmlFor="pair" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Pair</label>
                   <input id="pair" name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 uppercase" />
@@ -211,7 +247,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
                 </div>
               </div>
 
-              {/* SESSIE SELECTIE - NIEUWE SECTIE */}
+              {/* SESSIE SELECTIE */}
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block flex items-center gap-2">
                   <Clock size={14} /> Trading Session
@@ -250,7 +286,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-1">
-                  <label htmlFor="pnl" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL (Pips)</label>
+                  <label htmlFor="pnl" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</label>
                   <input id="pnl" name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
@@ -297,10 +333,10 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
 
               <div className="p-3 bg-pip-dark/50 border border-pip-border rounded-lg flex justify-around text-center">
                 <div><p className="text-[10px] text-pip-muted uppercase">Planned R:R</p><p className="font-bold text-pip-gold">{calculations.rrRatio}</p></div>
-                <div><p className="text-[10px] text-pip-muted uppercase">Risk (Pips)</p><p className="font-bold text-white">{calculations.risk}</p></div>
-                <div><p className="text-[10px] text-pip-muted uppercase">Reward (Pips)</p><p className="font-bold text-white">{calculations.reward}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Risk ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</p><p className="font-bold text-white">{calculations.risk}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Reward ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</p><p className="font-bold text-white">{calculations.reward}</p></div>
               </div>
-            </div>
+            </div >
 
             <div className="p-6 border-t border-pip-border flex justify-end gap-3">
               <button onClick={onClose} className="px-4 py-2 text-pip-muted hover:text-white transition-colors">Cancel</button>
@@ -315,8 +351,8 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
             </div>
           </>
         )}
-      </div>
-    </div>,
+      </div >
+    </div >,
     document.body
   );
 };
