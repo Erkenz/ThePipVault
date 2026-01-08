@@ -4,10 +4,13 @@ import { useTrades, Trade } from "@/context/TradeContext";
 import { useSettings } from "@/context/SettingsContext";
 import { useProfile } from "@/context/ProfileContext";
 import { LoadingCard } from "../ui/Loadingcard";
-import { Activity, Calendar, Trash2, ExternalLink, Hash, Maximize2, AlertTriangle, CheckCircle, XCircle, MinusCircle, Clock } from "lucide-react";
+import { Activity, Calendar, Trash2, ExternalLink, Hash, Maximize2, AlertTriangle, CheckCircle, XCircle, MinusCircle, Clock, Edit2, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import AddTradeModal from "@/components/modals/AddTradeModal";
 
 const TradeList = () => {
   const { trades, deleteTrade, loading } = useTrades();
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
 
   if (loading) {
     return (
@@ -35,13 +38,21 @@ const TradeList = () => {
   return (
     <div className="space-y-4">
       {sortedTrades.map((trade) => (
-        <TradeCard key={trade.id} trade={trade} onDelete={deleteTrade} />
+        <TradeCard key={trade.id} trade={trade} onDelete={deleteTrade} onEdit={setEditingTrade} />
       ))}
+
+      {editingTrade && (
+        <AddTradeModal
+          isOpen={!!editingTrade}
+          onClose={() => setEditingTrade(null)}
+          tradeToEdit={editingTrade}
+        />
+      )}
     </div>
   );
 };
 
-const TradeCard = ({ trade, onDelete }: { trade: Trade; onDelete: (id: string) => void }) => {
+const TradeCard = ({ trade, onDelete, onEdit }: { trade: Trade; onDelete: (id: string) => void; onEdit: (trade: Trade) => void }) => {
   const { viewMode } = useSettings();
   const { profile } = useProfile();
 
@@ -153,6 +164,13 @@ const TradeCard = ({ trade, onDelete }: { trade: Trade; onDelete: (id: string) =
             </div>
           </div>
 
+          {trade.comment && (
+            <div className="flex gap-2 mb-4 text-xs text-pip-muted/80 italic border-l-2 border-pip-border pl-3 py-1">
+              <MessageSquare size={12} className="shrink-0 mt-0.5" />
+              <p className="line-clamp-2">{trade.comment}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-4 border-t border-pip-border pt-3">
             <div><span className="text-[10px] text-pip-muted uppercase font-semibold">Entry</span><p className="text-white font-mono text-sm">{trade.entryPrice}</p></div>
             <div><span className="text-[10px] text-pip-muted uppercase font-semibold">SL</span><p className="text-pip-muted font-mono text-sm">{trade.stopLoss}</p></div>
@@ -176,7 +194,8 @@ const TradeCard = ({ trade, onDelete }: { trade: Trade; onDelete: (id: string) =
             {trade.chartUrl && (
               <a href={trade.chartUrl} target="_blank" rel="noreferrer" className="text-pip-muted hover:text-pip-gold p-1"><ExternalLink size={16} /></a>
             )}
-            <button onClick={() => onDelete(trade.id)} className="text-pip-muted hover:text-pip-red p-1 opacity-100 sm:opacity-0 group-hover:opacity-100"><Trash2 size={16} /></button>
+            <button onClick={() => onEdit(trade)} className="text-pip-muted hover:text-pip-green p-1 transition-opacity"><Edit2 size={16} /></button>
+            <button onClick={() => onDelete(trade.id)} className="text-pip-muted hover:text-pip-red p-1 transition-opacity"><Trash2 size={16} /></button>
           </div>
         </div>
       </div>

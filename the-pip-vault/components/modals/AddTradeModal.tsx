@@ -6,15 +6,18 @@ import { X, Save, CheckCircle, Loader2, Calculator, AlertCircle, Clock } from 'l
 import { useTrades } from '@/context/TradeContext';
 import { useProfile } from '@/context/ProfileContext';
 
+import { Trade } from '@/context/TradeContext';
+
 interface AddTradeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  tradeToEdit?: Trade;
 }
 
 const EMOTIONS = ['Confident', 'Neutral', 'FOMO', 'Greedy', 'Hesitant', 'Revenge'];
 
-const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
-  const { addTrade } = useTrades();
+const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => {
+  const { addTrade, updateTrade } = useTrades();
   const { profile } = useProfile();
 
   // States
@@ -35,6 +38,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     setup: 'Trend Continuation',
     emotion: 'Neutral',
     session: '',
+    comment: '',
   });
 
   const [calculations, setCalculations] = useState({
@@ -58,16 +62,33 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
         pnlCurrency: '',
         setup: 'Trend Continuation',
         emotion: 'Neutral',
-        session: profile.sessions[0] || '', // Use first available session
+        session: profile.sessions[0] || '',
+        comment: '',
       });
       setShowSuccess(false);
       setLoading(false);
       setInlineError(null);
+    } else if (tradeToEdit) {
+      // Pre-fill form if editing
+      setFormData({
+        pair: tradeToEdit.pair,
+        direction: tradeToEdit.direction,
+        entryPrice: String(tradeToEdit.entryPrice),
+        stopLoss: String(tradeToEdit.stopLoss),
+        takeProfit: tradeToEdit.takeProfit ? String(tradeToEdit.takeProfit) : '',
+        chartUrl: tradeToEdit.chartUrl || '',
+        pnl: String(tradeToEdit.pnl),
+        pnlCurrency: tradeToEdit.pnl_currency ? String(tradeToEdit.pnl_currency) : '',
+        setup: tradeToEdit.setup || 'Trend Continuation',
+        emotion: tradeToEdit.emotion || 'Neutral',
+        session: tradeToEdit.session || profile.sessions[0] || '',
+        comment: tradeToEdit.comment || '',
+      });
     } else {
-      // Ensure session is set when modal opens
+      // Ensure session is set when modal opens for new trade
       setFormData(prev => ({ ...prev, session: profile.sessions[0] || '' }));
     }
-  }, [isOpen, profile.sessions]);
+  }, [isOpen, profile.sessions, tradeToEdit]);
 
   // Automatische RR Calculaties
   useEffect(() => {
@@ -90,7 +111,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     }
   }, [formData.entryPrice, formData.stopLoss, formData.takeProfit, formData.pair]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (inlineError) setInlineError(null);
@@ -106,7 +127,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     setInlineError(null);
 
     try {
-      await addTrade({
+      const tradeData = {
         pair: formData.pair.toUpperCase(),
         direction: formData.direction,
         entryPrice: parseFloat(formData.entryPrice),
@@ -118,9 +139,18 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
         emotion: formData.emotion,
         session: formData.session,
         chartUrl: formData.chartUrl,
-        date: new Date().toISOString(),
-        rrRatio: calculations.rrRatio
-      });
+        rrRatio: calculations.rrRatio,
+        comment: formData.comment,
+      };
+
+      if (tradeToEdit) {
+        await updateTrade(tradeToEdit.id, tradeData);
+      } else {
+        await addTrade({
+          ...tradeData,
+          date: new Date().toISOString(),
+        });
+      }
 
       setShowSuccess(true);
       setTimeout(() => {
@@ -251,6 +281,18 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">TradingView Chart URL</label>
                 <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="comment" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Comment / Analysis</label>
+                <textarea
+                  id="comment"
+                  name="comment"
+                  value={formData.comment}
+                  onChange={handleChange}
+                  placeholder="Describe your thought process..."
+                  className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 min-h-[100px] resize-y"
+                />
               </div>
 
               <div className="p-3 bg-pip-dark/50 border border-pip-border rounded-lg flex justify-around text-center">
