@@ -16,7 +16,10 @@ import {
   AlertCircle,
   Hash,
   Plus,
-  X
+  X,
+  Settings,
+  Activity,
+  TrendingUp
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -32,6 +35,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [assetClass, setAssetClass] = useState<'forex' | 'futures'>(profile.asset_class || 'forex');
 
   // Zorg dat lokale state synchroniseert als het profiel geladen is
   useEffect(() => {
@@ -39,6 +43,7 @@ export default function SettingsPage() {
     setCurrency(profile.currency);
     setSelectedSessions(profile.sessions);
     setStrategies(profile.strategies || []);
+    setAssetClass(profile.asset_class || 'forex');
   }, [profile]);
 
   // --- Handlers ---
@@ -50,7 +55,8 @@ export default function SettingsPage() {
         starting_equity: parseFloat(equity),
         currency: currency,
         sessions: selectedSessions,
-        strategies: strategies
+        strategies: strategies,
+        asset_class: assetClass
       });
       setShowSaved(true);
       setTimeout(() => setShowSaved(false), 3000);
@@ -76,7 +82,7 @@ export default function SettingsPage() {
   const handleExportCSV = () => {
     if (trades.length === 0) return alert("No trades to export.");
 
-    // 1. Headers definiëren (Uitgebreide set)
+    // 1. Headers definiëren
     const headers = [
       "Date",
       "Pair",
@@ -84,11 +90,13 @@ export default function SettingsPage() {
       "Entry Price",
       "Stop Loss",
       "Take Profit",
-      "PnL (Pips)",
+      "PnL (Pips/Points)",
       "R:R Ratio",
       "Setup",
       "Emotion",
-      "Chart URL"
+      "Chart URL",
+      "Asset Class",
+      "Comment"
     ];
 
     // 2. Data transformeren naar CSV rijen
@@ -103,7 +111,9 @@ export default function SettingsPage() {
       (t.rrRatio || 0).toString().replace('.', ','),
       `"${t.setup || ""}"`,
       `"${t.emotion || ""}"`,
-      t.chartUrl || ""
+      t.chartUrl || "",
+      profile.asset_class || "forex",
+      `"${t.comment || ""}"`
     ]);
 
     // 3. Samenvoegen tot CSV string
@@ -144,6 +154,8 @@ export default function SettingsPage() {
     );
   }
 
+  const unitLabel = assetClass === 'futures' ? 'Points' : 'Pips';
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
       <header>
@@ -160,6 +172,57 @@ export default function SettingsPage() {
           </p>
         </div>
       )}
+
+      {/* NEW: TRADING PREFERENCES (ASSET CLASS) */}
+      <div className="bg-pip-card border border-pip-border rounded-2xl shadow-lg p-6 space-y-6">
+        <h3 className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block text-pip-gold flex items-center gap-2 text-sm">
+          <Activity size={16} /> Trading Preferences
+        </h3>
+
+        <div className="space-y-3">
+          <label className="text-sm font-bold text-white uppercase tracking-wider block">Asset Class Mode</label>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setAssetClass('forex')}
+              type="button"
+              className={`relative p-4 rounded-xl border-2 transition-all group ${assetClass === 'forex'
+                  ? 'bg-pip-gold/10 border-pip-gold text-white shadow-lg shadow-pip-gold/10'
+                  : 'bg-pip-dark border-pip-border text-pip-muted hover:border-pip-gold/50'
+                }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <DollarSign size={24} className={assetClass === 'forex' ? 'text-pip-gold' : 'text-pip-muted group-hover:text-pip-gold transition-colors'} />
+                <span className="font-bold">FOREX</span>
+                <span className="text-[10px] uppercase opacity-70">Pips Calculation</span>
+              </div>
+              {assetClass === 'forex' && (
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-pip-gold shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setAssetClass('futures')}
+              type="button"
+              className={`relative p-4 rounded-xl border-2 transition-all group ${assetClass === 'futures'
+                  ? 'bg-pip-gold/10 border-pip-gold text-white shadow-lg shadow-pip-gold/10'
+                  : 'bg-pip-dark border-pip-border text-pip-muted hover:border-pip-gold/50'
+                }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <TrendingUp size={24} className={assetClass === 'futures' ? 'text-pip-gold' : 'text-pip-muted group-hover:text-pip-gold transition-colors'} />
+                <span className="font-bold">FUTURES / INDICES</span>
+                <span className="text-[10px] uppercase opacity-70">Points Calculation</span>
+              </div>
+              {assetClass === 'futures' && (
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-pip-gold shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
+              )}
+            </button>
+          </div>
+          <p className="text-xs text-pip-muted mt-2">
+            Currently displaying: <strong className="text-white">{unitLabel}</strong>. This setting affects labels across the dashboard and journal.
+          </p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 

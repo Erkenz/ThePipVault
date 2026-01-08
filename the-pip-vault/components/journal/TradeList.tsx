@@ -57,7 +57,9 @@ const TradeCard = ({ trade, onDelete, onEdit }: { trade: Trade; onDelete: (id: s
   const { profile } = useProfile();
 
   let tradeValue = trade.pnl;
-  let label = 'Pips';
+  // Use trade-specific asset type if available, otherwise fallback (though fetch should ensure default)
+  const assetType = trade.asset_type || 'forex';
+  let label = assetType === 'futures' ? 'Points' : 'Pips';
   let prefix = '';
   let suffix = '';
   let decimals = 0;
