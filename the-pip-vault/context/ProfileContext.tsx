@@ -8,6 +8,7 @@ interface Profile {
   currency: string;
   sessions: string[];
   strategies: string[];
+  role: 'admin' | 'user';
 }
 
 interface ProfileContextType {
@@ -26,7 +27,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     starting_equity: 10000,
     currency: 'USD',
     sessions: ['London', 'New York', 'Asia'],
-    strategies: ['Trend Continuation', 'Breakout', 'Reversal']
+    strategies: ['Trend Continuation', 'Breakout', 'Reversal'],
+    role: 'user'
   });
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -48,7 +50,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
           starting_equity: Number(data.starting_equity),
           currency: data.currency,
           sessions: data.sessions || [],
-          strategies: data.strategies || ['Trend Continuation', 'Breakout', 'Reversal']
+          strategies: data.strategies || ['Trend Continuation', 'Breakout', 'Reversal'],
+          role: data.role || 'user'
         });
       }
     } catch (err) {
@@ -88,7 +91,7 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     if (!user) return;
     const { error } = await supabase.from('trades').delete().eq('user_id', user.id);
     if (error) throw error;
-    window.location.reload(); 
+    window.location.reload();
   };
 
   const resetSettingsOnly = async () => {
@@ -109,13 +112,13 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
   };
 
   return (
-    <ProfileContext.Provider value={{ 
-      profile, 
-      updateProfile, 
-      resetTradesOnly, 
-      resetSettingsOnly, 
-      resetFullAccount, 
-      loading 
+    <ProfileContext.Provider value={{
+      profile,
+      updateProfile,
+      resetTradesOnly,
+      resetSettingsOnly,
+      resetFullAccount,
+      loading
     }}>
       {children}
     </ProfileContext.Provider>
