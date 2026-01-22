@@ -12,7 +12,7 @@ const NavBar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const pathname = usePathname();
 
-  if (pathname === '/login') return null;
+  if (pathname === '/login' || pathname === '/register') return null;
 
   return (
     <nav className="border-b border-pip-border bg-pip-card/50 backdrop-blur-md sticky top-0 z-40">
@@ -55,6 +55,7 @@ const NavBar = () => {
 };
 
 const NavLink = ({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active: boolean }) => (
+
   <Link
     href={href}
     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${active ? 'text-pip-gold bg-pip-gold/10' : 'text-pip-muted hover:text-white hover:bg-pip-dark'

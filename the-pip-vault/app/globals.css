@@ -3,7 +3,8 @@
 @theme {
   /* --- The PipLab Huisstijl Palet --- */
   --color-pip-gold: #d4af37;
-  --color-pip-gold-dim: #b8962e; /* Voor hover effecten */
+  --color-pip-gold-dim: #b8962e;
+  /* Voor hover effecten */
   --color-pip-dark: #131722;
   --color-pip-card: #1E222D;
   --color-pip-border: #2A2E39;
@@ -39,14 +40,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-pip-dark); 
+  background: var(--color-pip-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-pip-border); 
+  background: var(--color-pip-border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-pip-gold); 
+  background: var(--color-pip-gold);
 }

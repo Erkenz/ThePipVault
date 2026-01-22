@@ -1,22 +1,27 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, CheckCircle, Loader2, Calculator, AlertCircle, Clock } from 'lucide-react';
 import { useTrades } from '@/context/TradeContext';
 import { useProfile } from '@/context/ProfileContext';
 
+import { Trade } from '@/context/TradeContext';
+
 interface AddTradeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  tradeToEdit?: Trade;
 }
 
 const EMOTIONS = ['Confident', 'Neutral', 'FOMO', 'Greedy', 'Hesitant', 'Revenge'];
 
-const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
-  const { addTrade } = useTrades();
+const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => {
+  const { addTrade, updateTrade } = useTrades();
   const { profile } = useProfile();
 
   // States
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -29,9 +34,12 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     takeProfit: '',
     chartUrl: '',
     pnl: '',
+    pnlCurrency: '',
     setup: 'Trend Continuation',
     emotion: 'Neutral',
     session: '',
+    comment: '',
+    assetType: 'forex' as 'forex' | 'futures', // Local state for asset type
   });
 
   const [calculations, setCalculations] = useState({
@@ -40,8 +48,9 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     rrRatio: 0
   });
 
-  // Reset form bij openen/sluiten en zet standaard sessie
+  // Reset form bij openen/sluiten en zet standaard sessie + asset class
   useEffect(() => {
+    setMounted(true);
     if (!isOpen) {
       setFormData({
         pair: '',
@@ -51,18 +60,42 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
         takeProfit: '',
         chartUrl: '',
         pnl: '',
+        pnlCurrency: '',
         setup: 'Trend Continuation',
         emotion: 'Neutral',
-        session: profile.sessions[0] || '', // Pak de eerste beschikbare sessie uit settings
+        session: profile.sessions[0] || '',
+        comment: '',
+        assetType: profile.asset_class || 'forex', // Default to profile setting
       });
       setShowSuccess(false);
       setLoading(false);
       setInlineError(null);
+    } else if (tradeToEdit) {
+      // Pre-fill form if editing
+      setFormData({
+        pair: tradeToEdit.pair,
+        direction: tradeToEdit.direction,
+        entryPrice: String(tradeToEdit.entryPrice),
+        stopLoss: String(tradeToEdit.stopLoss),
+        takeProfit: tradeToEdit.takeProfit ? String(tradeToEdit.takeProfit) : '',
+        chartUrl: tradeToEdit.chartUrl || '',
+        pnl: String(tradeToEdit.pnl),
+        pnlCurrency: tradeToEdit.pnl_currency ? String(tradeToEdit.pnl_currency) : '',
+        setup: tradeToEdit.setup || 'Trend Continuation',
+        emotion: tradeToEdit.emotion || 'Neutral',
+        session: tradeToEdit.session || profile.sessions[0] || '',
+        comment: tradeToEdit.comment || '',
+        assetType: tradeToEdit.asset_type || profile.asset_class || 'forex',
+      });
     } else {
-      // Zorg dat de sessie gevuld is als de modal opent
-      setFormData(prev => ({ ...prev, session: profile.sessions[0] || '' }));
+      // Ensure session and assetType are set when modal opens for new trade
+      setFormData(prev => ({
+        ...prev,
+        session: profile.sessions[0] || '',
+        assetType: profile.asset_class || 'forex'
+      }));
     }
-  }, [isOpen, profile.sessions]);
+  }, [isOpen, profile.sessions, profile.asset_class, tradeToEdit]);
 
   // Automatische RR Calculaties
   useEffect(() => {
@@ -75,7 +108,13 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
       const rewardVal = !isNaN(tp) ? Math.abs(tp - entry) : 0;
 
       const isJPY = formData.pair.toUpperCase().includes('JPY');
-      const multiplier = isJPY ? 100 : 10000;
+
+      let multiplier = 10000;
+      if (formData.assetType === 'futures') {
+        multiplier = 1; // 1 Point = 1.00 price difference (standard for indices)
+      } else if (isJPY) {
+        multiplier = 100;
+      }
 
       setCalculations({
         risk: parseFloat((riskVal * multiplier).toFixed(1)),
@@ -85,7 +124,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     }
   }, [formData.entryPrice, formData.stopLoss, formData.takeProfit, formData.pair]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (inlineError) setInlineError(null);
@@ -93,7 +132,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
 
   const handleSave = async () => {
     if (!formData.pair || !formData.entryPrice || !formData.pnl || !formData.session) {
-      setInlineError("Vul de verplichte velden in: Pair, Entry, PnL en Session.");
+      setInlineError("Please fill in required fields: Pair, Entry, PnL, and Session.");
       return;
     }
 
@@ -101,20 +140,31 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
     setInlineError(null);
 
     try {
-      await addTrade({
+      const tradeData = {
         pair: formData.pair.toUpperCase(),
         direction: formData.direction,
         entryPrice: parseFloat(formData.entryPrice),
         stopLoss: parseFloat(formData.stopLoss),
         takeProfit: formData.takeProfit ? parseFloat(formData.takeProfit) : undefined,
         pnl: parseFloat(formData.pnl),
+        pnl_currency: formData.pnlCurrency ? parseFloat(formData.pnlCurrency) : undefined,
         setup: formData.setup,
         emotion: formData.emotion,
-        session: formData.session, // Sessie meesturen naar DB
+        session: formData.session,
         chartUrl: formData.chartUrl,
-        date: new Date().toISOString(),
-        rrRatio: calculations.rrRatio
-      });
+        rrRatio: calculations.rrRatio,
+        comment: formData.comment,
+        asset_type: formData.assetType,
+      };
+
+      if (tradeToEdit) {
+        await updateTrade(tradeToEdit.id, tradeData);
+      } else {
+        await addTrade({
+          ...tradeData,
+          date: new Date().toISOString(),
+        });
+      }
 
       setShowSuccess(true);
       setTimeout(() => {
@@ -122,15 +172,15 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
       }, 1500);
     } catch (error: any) {
       console.error("Fout bij opslaan:", error);
-      setInlineError(error.message || "Kon de trade niet opslaan. Controleer je verbinding.");
+      setInlineError(error.message || "Could not save trade. Please check your connection.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-pip-card border border-pip-border w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden relative">
 
@@ -140,7 +190,7 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
               <CheckCircle size={48} />
             </div>
             <h3 className="text-2xl font-bold text-white">Trade Vaulted</h3>
-            <p className="text-pip-muted text-sm">Vandaag opgeslagen in je PipVault.</p>
+            <p className="text-pip-muted text-sm">Saved securely to your PipVault.</p>
           </div>
         ) : (
           <>
@@ -161,10 +211,32 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
                 </div>
               )}
 
+              {/* ASSET TYPE TOGGLE */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Asset Type</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, assetType: 'forex' }))}
+                    className={`flex-1 py-2 rounded-lg font-bold border transition-all text-xs ${formData.assetType === 'forex' ? 'bg-pip-gold/20 text-pip-gold border-pip-gold' : 'bg-pip-dark text-pip-muted border-pip-border'}`}
+                  >
+                    FOREX
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, assetType: 'futures' }))}
+                    className={`flex-1 py-2 rounded-lg font-bold border transition-all text-xs ${formData.assetType === 'futures' ? 'bg-pip-gold/20 text-pip-gold border-pip-gold' : 'bg-pip-dark text-pip-muted border-pip-border'}`}
+                  >
+                    FUTURES / INDICES
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Pair</label>
-                  <input name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none uppercase" />
+                {/* ... Pair and Direction ... */}
+                <div className="space-y-1">
+                  <label htmlFor="pair" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Pair</label>
+                  <input id="pair" name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 uppercase" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Direction</label>
@@ -175,9 +247,9 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
                 </div>
               </div>
 
-              {/* SESSIE SELECTIE - NIEUWE SECTIE */}
+              {/* SESSIE SELECTIE */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-pip-muted uppercase tracking-wider flex items-center gap-2">
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block flex items-center gap-2">
                   <Clock size={14} /> Trading Session
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -187,8 +259,8 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
                       type="button"
                       onClick={() => setFormData({ ...formData, session: s })}
                       className={`py-2 rounded-lg font-bold border transition-all text-xs ${formData.session === s
-                          ? 'bg-pip-gold/20 text-pip-gold border-pip-gold'
-                          : 'bg-pip-dark text-pip-muted border-pip-border hover:border-white/10'
+                        ? 'bg-pip-gold/20 text-pip-gold border-pip-gold'
+                        : 'bg-pip-dark text-pip-muted border-pip-border hover:border-white/10'
                         }`}
                     >
                       {s}
@@ -199,31 +271,35 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Entry</label>
-                  <input name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+                  <label htmlFor="entryPrice" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Entry</label>
+                  <input id="entryPrice" name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Stop Loss</label>
-                  <input name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+                  <label htmlFor="stopLoss" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Stop Loss</label>
+                  <input id="stopLoss" name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Take Profit</label>
-                  <input name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+                  <label htmlFor="takeProfit" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Take Profit</label>
+                  <input id="takeProfit" name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Realized PnL (Pips)</label>
-                  <input name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white focus:border-pip-gold outline-none" />
+                  <label htmlFor="pnl" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</label>
+                  <input id="pnl" name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Setup</label>
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL ($)</label>
+                  <input name="pnlCurrency" value={formData.pnlCurrency} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Setup</label>
                   <select
                     name="setup"
                     value={formData.setup}
                     onChange={handleChange}
-                    className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white outline-none"
+                    className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
                   >
                     {profile.strategies.map(s => (
                       <option key={s} value={s}>{s}</option>
@@ -231,31 +307,43 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-pip-muted uppercase">Emotion</label>
-                  <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-lg px-3 py-2 text-white outline-none">
+                  <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Emotion</label>
+                  <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30">
                     {EMOTIONS.map(e => <option key={e} value={e}>{e}</option>)}
                   </select>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">TradingView Chart URL</label>
-                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white focus:border-pip-gold outline-none" />
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">TradingView Chart URL</label>
+                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="comment" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Comment / Analysis</label>
+                <textarea
+                  id="comment"
+                  name="comment"
+                  value={formData.comment}
+                  onChange={handleChange}
+                  placeholder="Describe your thought process..."
+                  className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 min-h-[100px] resize-y"
+                />
               </div>
 
               <div className="p-3 bg-pip-dark/50 border border-pip-border rounded-lg flex justify-around text-center">
                 <div><p className="text-[10px] text-pip-muted uppercase">Planned R:R</p><p className="font-bold text-pip-gold">{calculations.rrRatio}</p></div>
-                <div><p className="text-[10px] text-pip-muted uppercase">Risk (Pips)</p><p className="font-bold text-white">{calculations.risk}</p></div>
-                <div><p className="text-[10px] text-pip-muted uppercase">Reward (Pips)</p><p className="font-bold text-white">{calculations.reward}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Risk ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</p><p className="font-bold text-white">{calculations.risk}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Reward ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</p><p className="font-bold text-white">{calculations.reward}</p></div>
               </div>
-            </div>
+            </div >
 
             <div className="p-6 border-t border-pip-border flex justify-end gap-3">
               <button onClick={onClose} className="px-4 py-2 text-pip-muted hover:text-white transition-colors">Cancel</button>
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-8 py-2 rounded-lg flex items-center gap-2 transition-all disabled:opacity-50 active:scale-95 shadow-lg shadow-pip-gold/10"
+                className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-pip-gold/10"
               >
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                 SAVE TRADE
@@ -263,8 +351,9 @@ const AddTradeModal = ({ isOpen, onClose }: AddTradeModalProps) => {
             </div>
           </>
         )}
-      </div>
-    </div>
+      </div >
+    </div >,
+    document.body
   );
 };
 

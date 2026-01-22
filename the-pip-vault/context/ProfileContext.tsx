@@ -4,11 +4,14 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { createClient } from '@/utils/supabase/client';
 
 interface Profile {
+  first_name?: string;
+  last_name?: string;
   starting_equity: number;
   currency: string;
   sessions: string[];
   strategies: string[];
   role: 'admin' | 'user';
+  asset_class: 'forex' | 'futures';
 }
 
 interface ProfileContextType {
@@ -24,11 +27,14 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile>({
+    first_name: '',
+    last_name: '',
     starting_equity: 10000,
     currency: 'USD',
     sessions: ['London', 'New York', 'Asia'],
     strategies: ['Trend Continuation', 'Breakout', 'Reversal'],
-    role: 'user'
+    role: 'user',
+    asset_class: 'forex'
   });
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -47,11 +53,14 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (data) {
         setProfile({
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
           starting_equity: Number(data.starting_equity),
           currency: data.currency,
           sessions: data.sessions || [],
           strategies: data.strategies || ['Trend Continuation', 'Breakout', 'Reversal'],
-          role: data.role || 'user'
+          role: data.role || 'user',
+          asset_class: data.asset_class || 'forex'
         });
       }
     } catch (err) {
@@ -96,9 +105,12 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
 
   const resetSettingsOnly = async () => {
     await updateProfile({
+      first_name: '',
+      last_name: '',
       starting_equity: 10000,
       currency: 'USD',
-      sessions: ['London', 'New York', 'Asia']
+      sessions: ['London', 'New York', 'Asia'],
+      asset_class: 'forex'
     });
   };
 

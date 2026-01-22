@@ -13,18 +13,22 @@ export interface Trade {
   stopLoss: number;
   takeProfit?: number;
   pnl: number;
-  session: string;
+  pnl_currency?: number;
   setup?: string;
   emotion?: string;
+  session?: string;
   chartUrl?: string;
   rrRatio?: number;
+  comment?: string;
+  asset_type?: 'forex' | 'futures';
 }
 
 interface TradeContextType {
   trades: Trade[];
-  addTrade: (trade: Omit<Trade, 'id' | 'user_id'>) => Promise<void>;
-  deleteTrade: (id: string) => Promise<void>;
   loading: boolean;
+  addTrade: (trade: Omit<Trade, 'id' | 'user_id'>) => Promise<void>;
+  updateTrade: (id: string, updatedData: Partial<Omit<Trade, 'id' | 'user_id'>>) => Promise<void>;
+  deleteTrade: (id: string) => Promise<void>;
 }
 
 const TradeContext = createContext<TradeContextType | undefined>(undefined);
@@ -38,10 +42,10 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const fetchTrades = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Controleer eerst of er een user is
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         setTrades([]);
         setLoading(false);
@@ -51,20 +55,33 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase
         .from('trades')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
       if (error) throw error;
 
-      const mappedTrades: Trade[] = (data || []).map(t => ({
-        ...t,
-        entryPrice: Number(t.entry_price),
-        stopLoss: Number(t.stop_loss),
-        takeProfit: Number(t.take_profit),
-        chartUrl: t.chart_url,
-        rrRatio: Number(t.rr_ratio)
-      }));
-
-      setTrades(mappedTrades);
+      if (data) {
+        const mappedTrades: Trade[] = data.map((t: any) => ({
+          id: t.id,
+          user_id: t.user_id,
+          date: t.date,
+          pair: t.pair,
+          direction: t.direction,
+          entryPrice: Number(t.entry_price),
+          stopLoss: Number(t.stop_loss),
+          takeProfit: t.take_profit ? Number(t.take_profit) : undefined,
+          pnl: Number(t.pnl),
+          pnl_currency: t.pnl_currency ? Number(t.pnl_currency) : undefined,
+          setup: t.setup,
+          emotion: t.emotion,
+          session: t.session,
+          chartUrl: t.chart_url,
+          rrRatio: t.rr_ratio ? Number(t.rr_ratio) : undefined,
+          comment: t.trade_comment,
+          asset_type: t.asset_type || 'forex'
+        }));
+        setTrades(mappedTrades);
+      }
     } catch (err) {
       console.error("Fout bij ophalen trades:", err);
     } finally {
@@ -109,7 +126,9 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         setup: newTradeData.setup,
         emotion: newTradeData.emotion,
         chart_url: newTradeData.chartUrl,
-        rr_ratio: newTradeData.rrRatio
+        rr_ratio: newTradeData.rrRatio,
+        pnl_currency: newTradeData.pnl_currency,
+        trade_comment: newTradeData.comment // Insert comment
       };
 
       const { data, error } = await supabase
@@ -131,13 +150,65 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         stopLoss: Number(savedTradeRaw.stop_loss),
         takeProfit: Number(savedTradeRaw.take_profit),
         chartUrl: savedTradeRaw.chart_url,
-        rrRatio: Number(savedTradeRaw.rr_ratio)
+        rrRatio: Number(savedTradeRaw.rr_ratio),
+        pnl_currency: Number(savedTradeRaw.pnl_currency),
+        comment: savedTradeRaw.trade_comment
       };
 
       setTrades((prev) => [savedTrade, ...prev]);
     } catch (err: any) {
       console.error("Fout bij toevoegen trade:", err.message || err);
-      throw err; 
+      throw err;
+    }
+  };
+
+  const updateTrade = async (id: string, updatedData: Partial<Omit<Trade, 'id' | 'user_id'>>) => {
+    try {
+      const tradeToUpdate: any = {};
+      if (updatedData.pair) tradeToUpdate.pair = updatedData.pair;
+      if (updatedData.direction) tradeToUpdate.direction = updatedData.direction;
+      if (updatedData.entryPrice) tradeToUpdate.entry_price = updatedData.entryPrice;
+      if (updatedData.stopLoss) tradeToUpdate.stop_loss = updatedData.stopLoss;
+      if (updatedData.takeProfit !== undefined) tradeToUpdate.take_profit = updatedData.takeProfit;
+      if (updatedData.pnl) tradeToUpdate.pnl = updatedData.pnl;
+      if (updatedData.pnl_currency !== undefined) tradeToUpdate.pnl_currency = updatedData.pnl_currency;
+      if (updatedData.setup) tradeToUpdate.setup = updatedData.setup;
+      if (updatedData.emotion) tradeToUpdate.emotion = updatedData.emotion;
+      if (updatedData.session) tradeToUpdate.session = updatedData.session;
+      if (updatedData.chartUrl) tradeToUpdate.chart_url = updatedData.chartUrl;
+      if (updatedData.rrRatio) tradeToUpdate.rr_ratio = updatedData.rrRatio;
+      if (updatedData.comment !== undefined) tradeToUpdate.trade_comment = updatedData.comment;
+      if (updatedData.date) tradeToUpdate.date = updatedData.date;
+      if (updatedData.asset_type) tradeToUpdate.asset_type = updatedData.asset_type;
+
+      const { data, error } = await supabase
+        .from('trades')
+        .update(tradeToUpdate)
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) throw new Error("Update mislukt");
+
+      const updatedTradeRaw = data[0];
+      // Update local state
+      setTrades(prev => prev.map(t => t.id === id ? {
+        ...t,
+        ...updatedData,
+        // Merge any returned fields if needed, but simple overwrite here works if we trust the input
+        // Better to use the returned data to be sure
+        pair: updatedTradeRaw.pair,
+        entryPrice: Number(updatedTradeRaw.entry_price),
+        stopLoss: Number(updatedTradeRaw.stop_loss),
+        pnl: Number(updatedTradeRaw.pnl),
+        // ... map others properly potentially, or just optimistically update from updatedData + id/user_id preservation
+        comment: updatedTradeRaw.trade_comment,
+        asset_type: updatedTradeRaw.asset_type
+      } : t));
+    } catch (err) {
+      console.error("Fout bij updaten trade:", err);
+      throw err;
     }
   };
 
@@ -157,7 +228,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <TradeContext.Provider value={{ trades, addTrade, deleteTrade, loading }}>
+    <TradeContext.Provider value={{ trades, addTrade, updateTrade, deleteTrade, loading }}>
       {children}
     </TradeContext.Provider>
   );
