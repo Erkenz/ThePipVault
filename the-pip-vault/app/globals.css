@@ -1,36 +1,58 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- The PipLab Huisstijl Palet --- */
+  /* --- The PipLab Primitive Palette (Base Colors) --- */
   --color-pip-gold: #d4af37;
   --color-pip-gold-dim: #b8962e;
-  /* Voor hover effecten */
-  --color-pip-dark: #131722;
-  --color-pip-card: #1E222D;
-  --color-pip-border: #2A2E39;
-  --color-pip-text: #D1D4DC;
+  
+  --color-pip-dark-hex: #131722;
+  --color-pip-card-hex: #1E222D;
+  --color-pip-border-hex: #2A2E39;
+  --color-pip-text-hex: #D1D4DC;
+  
   --color-pip-muted: #787D8F;
   --color-pip-green: #089981;
   --color-pip-red: #F23645;
 
-  /* Bestaande Next.js variabelen behouden */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* --- Semantic Colors (Dynamic) --- */
+  /* These map to Tailwind classes like bg-pip-dark, text-pip-text, etc. */
+  --color-pip-dark: var(--background);
+  --color-pip-card: var(--card-bg);
+  --color-pip-border: var(--border-color);
+  --color-pip-text: var(--text-primary);
+  --color-pip-active: var(--active-bg);
+
+  /* Font mappings */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* Forceer PipLab Dark Mode instellingen (altijd aan) */
+/* Light Mode Defaults */
 :root {
-  --background: var(--color-pip-dark);
-  --foreground: var(--color-pip-text);
+  --background: #ffffff;
+  --card-bg: #f3f4f6; /* gray-100 */
+  --border-color: #e5e7eb; /* gray-200 */
+  --text-primary: #111827; /* gray-900 */
+  --active-bg: #e5e7eb; 
+  --foreground: #111827;
+}
+
+/* Dark Mode Overrides */
+.dark {
+  --background: #131722;
+  --card-bg: #1E222D;
+  --border-color: #2A2E39;
+  --text-primary: #D1D4DC;
+  --active-bg: #2A2E39;
+  --foreground: #D1D4DC;
 }
 
 body {
   background-color: var(--background);
-  color: var(--foreground);
+  color: var(--text-primary);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* --- Pro Scrollbar Styling --- */

@@ -38,7 +38,7 @@ const ResetVaultModal = ({ isOpen, onClose, onResetTrades, onResetSettings, onRe
             <ShieldAlert size={24} />
             <h2 className="text-xl font-black uppercase italic tracking-tighter">Danger Zone: Reset Vault</h2>
           </div>
-          <button onClick={onClose} className="text-pip-muted hover:text-white transition-colors">
+          <button onClick={onClose} className="text-pip-muted hover:text-pip-text transition-colors">
             <X size={24} />
           </button>
         </div>
@@ -59,7 +59,7 @@ const ResetVaultModal = ({ isOpen, onClose, onResetTrades, onResetSettings, onRe
                 <Trash2 size={20} />
               </div>
               <div>
-                <p className="font-bold text-white uppercase text-xs">Reset Trade History</p>
+                <p className="font-bold text-pip-text uppercase text-xs">Reset Trade History</p>
                 <p className="text-[10px] text-pip-muted">Delete all trades, keep capital settings.</p>
               </div>
             </div>
@@ -77,7 +77,7 @@ const ResetVaultModal = ({ isOpen, onClose, onResetTrades, onResetSettings, onRe
                 <RotateCcw size={20} />
               </div>
               <div>
-                <p className="font-bold text-white uppercase text-xs">Reset Settings</p>
+                <p className="font-bold text-pip-text uppercase text-xs">Reset Settings</p>
                 <p className="text-[10px] text-pip-muted">Reset capital and sessions to default (10k USD).</p>
               </div>
             </div>
@@ -104,7 +104,7 @@ const ResetVaultModal = ({ isOpen, onClose, onResetTrades, onResetSettings, onRe
         </div>
 
         <div className="p-4 bg-pip-dark/50 flex justify-center">
-          <button onClick={onClose} className="text-xs font-bold text-pip-muted hover:text-white uppercase tracking-widest">
+          <button onClick={onClose} className="text-xs font-bold text-pip-muted hover:text-pip-text uppercase tracking-widest">
             Cancel
           </button>
         </div>

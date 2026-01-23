@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { redirect } from "next/navigation";
 import {
     Users,
@@ -16,6 +17,7 @@ interface DashboardStats {
 
 export default async function AdminDashboard() {
     const supabase = await createClient();
+    const adminAuthClient = createAdminClient();
 
     // 1. Auth Check
     const { data: { user } } = await supabase.auth.getUser();
@@ -45,12 +47,29 @@ export default async function AdminDashboard() {
         .from('trades')
         .select('*', { count: 'exact', head: true });
 
-    // Fetch Recent Users
-    const { data: recentUsers } = await supabase
+    // 4. Fetch USERS from Auth API (Privileged)
+    const { data: { users: authUsers }, error: authError } = await adminAuthClient.auth.admin.listUsers();
+
+    // Fetch Profiles
+    const { data: profiles } = await supabase
         .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .select('*');
+
+    // Merge Data
+    const mergedUsers = authUsers?.map(user => {
+        const userProfile = profiles?.find(p => p.id === user.id);
+        return {
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+            last_sign_in: user.last_sign_in_at,
+            role: userProfile?.role || 'user',
+            ...userProfile
+        };
+    }) || [];
+
+    // Sort by created_at desc
+    mergedUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-10">
@@ -72,7 +91,7 @@ export default async function AdminDashboard() {
                 <div className="bg-pip-card border border-pip-border p-6 rounded-2xl relative overflow-hidden group hover:border-pip-gold/50 transition-colors">
                     <div className="relative z-10">
                         <h3 className="text-pip-muted text-sm font-medium mb-1">Total Users</h3>
-                        <div className="text-3xl font-bold text-white mb-2">{userCount || 0}</div>
+                        <div className="text-3xl font-bold text-pip-text mb-2">{userCount || 0}</div>
                     </div>
                     <Users className="absolute right-4 top-4 text-pip-muted/10 group-hover:text-pip-gold/20 transition-colors" size={64} />
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-pip-gold/0 via-pip-gold/50 to-pip-gold/0 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -82,7 +101,7 @@ export default async function AdminDashboard() {
                 <div className="bg-pip-card border border-pip-border p-6 rounded-2xl relative overflow-hidden group hover:border-pip-blue/50 transition-colors">
                     <div className="relative z-10">
                         <h3 className="text-pip-muted text-sm font-medium mb-1">Total Trades Logged</h3>
-                        <div className="text-3xl font-bold text-white mb-2">{tradeCount || 0}</div>
+                        <div className="text-3xl font-bold text-pip-text mb-2">{tradeCount || 0}</div>
                     </div>
                     <Activity className="absolute right-4 top-4 text-pip-muted/10 group-hover:text-pip-blue/20 transition-colors" size={64} />
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-pip-blue/0 via-pip-blue/50 to-pip-blue/0 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -100,28 +119,31 @@ export default async function AdminDashboard() {
 
             {/* Recent Users Table */}
             <div className="pt-6 border-t border-pip-border space-y-4">
-                <h2 className="text-xl font-bold text-white">Recent Users</h2>
+                <h2 className="text-xl font-bold text-pip-text">Recent Users</h2>
                 <div className="bg-pip-card border border-pip-border rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="bg-pip-active/50 text-pip-muted text-sm">
                                 <tr>
-                                    <th className="p-4 font-medium">User ID</th>
+                                    <th className="p-4 font-medium">User Details</th>
                                     <th className="p-4 font-medium">Role</th>
                                     <th className="p-4 font-medium">Joined</th>
                                     <th className="p-4 font-medium">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-pip-border">
-                                {recentUsers?.map((user) => (
+                                {mergedUsers.map((user) => (
                                     <tr key={user.id} className="hover:bg-pip-active/20 transition-colors text-sm">
-                                        <td className="p-4 text-pip-text font-mono truncate max-w-[200px]" title={user.id}>
-                                            {user.id}
+                                        <td className="p-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-pip-text font-medium">{user.email}</span>
+                                                <span className="text-pip-muted text-xs font-mono">{user.id}</span>
+                                            </div>
                                         </td>
                                         <td className="p-4 text-pip-text">
                                             <span className={`px-2 py-1 rounded-full text-xs border ${user.role === 'admin'
-                                                    ? 'bg-pip-gold/10 border-pip-gold/30 text-pip-gold'
-                                                    : 'bg-pip-border/50 border-pip-border text-pip-muted'
+                                                ? 'bg-pip-gold/10 border-pip-gold/30 text-pip-gold'
+                                                : 'bg-pip-border/50 border-pip-border text-pip-muted'
                                                 }`}>
                                                 {user.role || 'user'}
                                             </span>
@@ -137,7 +159,7 @@ export default async function AdminDashboard() {
                                         </td>
                                     </tr>
                                 ))}
-                                {(!recentUsers || recentUsers.length === 0) && (
+                                {mergedUsers.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="p-8 text-center text-pip-muted">
                                             No users found.

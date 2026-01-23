@@ -5,6 +5,7 @@ import Navbar from "../components/layout/NavBar";
 import { TradeProvider } from "../context/TradeContext"
 import { ProfileProvider } from "@/context/ProfileContext";
 import { SettingsProvider } from "@/context/SettingsContext";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,21 +28,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-pip-dark text-pip-text`}
-        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <ProfileProvider>
-          <SettingsProvider>
-            <TradeProvider>
-              <Navbar />
-              <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {children}
-              </main>
-            </TradeProvider>
-          </SettingsProvider>
-        </ProfileProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ProfileProvider>
+            <SettingsProvider>
+              <TradeProvider>
+                <Navbar />
+                <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  {children}
+                </main>
+              </TradeProvider>
+            </SettingsProvider>
+          </ProfileProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

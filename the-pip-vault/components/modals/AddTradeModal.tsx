@@ -40,6 +40,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
     session: '',
     comment: '',
     assetType: 'forex' as 'forex' | 'futures', // Local state for asset type
+    date: '', // [NEW] Date field
   });
 
   const [calculations, setCalculations] = useState({
@@ -66,6 +67,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         session: profile.sessions[0] || '',
         comment: '',
         assetType: profile.asset_class || 'forex', // Default to profile setting
+        date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) // Default to now (local)
       });
       setShowSuccess(false);
       setLoading(false);
@@ -86,6 +88,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         session: tradeToEdit.session || profile.sessions[0] || '',
         comment: tradeToEdit.comment || '',
         assetType: tradeToEdit.asset_type || profile.asset_class || 'forex',
+        date: tradeToEdit.date ? new Date(new Date(tradeToEdit.date).getTime() - new Date(tradeToEdit.date).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
       });
     } else {
       // Ensure session and assetType are set when modal opens for new trade
@@ -131,8 +134,8 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
   };
 
   const handleSave = async () => {
-    if (!formData.pair || !formData.entryPrice || !formData.pnl || !formData.session) {
-      setInlineError("Please fill in required fields: Pair, Entry, PnL, and Session.");
+    if (!formData.pair || !formData.entryPrice || !formData.session) {
+      setInlineError("Please fill in required fields: Pair, Entry, and Session.");
       return;
     }
 
@@ -146,7 +149,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         entryPrice: parseFloat(formData.entryPrice),
         stopLoss: parseFloat(formData.stopLoss),
         takeProfit: formData.takeProfit ? parseFloat(formData.takeProfit) : undefined,
-        pnl: parseFloat(formData.pnl),
+        pnl: formData.pnl ? parseFloat(formData.pnl) : 0,
         pnl_currency: formData.pnlCurrency ? parseFloat(formData.pnlCurrency) : undefined,
         setup: formData.setup,
         emotion: formData.emotion,
@@ -162,7 +165,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
       } else {
         await addTrade({
           ...tradeData,
-          date: new Date().toISOString(),
+          date: new Date(formData.date).toISOString(),
         });
       }
 
@@ -189,16 +192,16 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
             <div className="w-20 h-20 bg-pip-green/20 rounded-full flex items-center justify-center text-pip-green">
               <CheckCircle size={48} />
             </div>
-            <h3 className="text-2xl font-bold text-white">Trade Vaulted</h3>
+            <h3 className="text-2xl font-bold text-pip-text">Trade Vaulted</h3>
             <p className="text-pip-muted text-sm">Saved securely to your PipVault.</p>
           </div>
         ) : (
           <>
             <div className="flex items-center justify-between p-6 border-b border-pip-border">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl font-bold text-pip-text flex items-center gap-2">
                 <Calculator className="text-pip-gold" size={20} /> Log New Trade
               </h2>
-              <button onClick={onClose} className="text-pip-muted hover:text-white transition-colors">
+              <button onClick={onClose} className="text-pip-muted hover:text-pip-text transition-colors">
                 <X size={24} />
               </button>
             </div>
@@ -232,11 +235,24 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
                 </div>
               </div>
 
+              {/* DATE FIELD */}
+              <div className="space-y-2">
+                <label htmlFor="date" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Date & Time</label>
+                <input
+                  id="date"
+                  name="date"
+                  type="datetime-local"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 [color-scheme:dark]"
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* ... Pair and Direction ... */}
                 <div className="space-y-1">
                   <label htmlFor="pair" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Pair</label>
-                  <input id="pair" name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 uppercase" />
+                  <input id="pair" name="pair" value={formData.pair} onChange={handleChange} type="text" placeholder="EURUSD" className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 uppercase" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-pip-muted uppercase tracking-wider">Direction</label>
@@ -272,26 +288,26 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <label htmlFor="entryPrice" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Entry</label>
-                  <input id="entryPrice" name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                  <input id="entryPrice" name="entryPrice" value={formData.entryPrice} onChange={handleChange} type="number" step="0.00001" className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="stopLoss" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Stop Loss</label>
-                  <input id="stopLoss" name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                  <input id="stopLoss" name="stopLoss" value={formData.stopLoss} onChange={handleChange} type="number" step="0.00001" className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="takeProfit" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Take Profit</label>
-                  <input id="takeProfit" name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                  <input id="takeProfit" name="takeProfit" value={formData.takeProfit} onChange={handleChange} type="number" step="0.00001" className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-1">
                   <label htmlFor="pnl" className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</label>
-                  <input id="pnl" name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                  <input id="pnl" name="pnl" value={formData.pnl} onChange={handleChange} type="number" className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Realized PnL ($)</label>
-                  <input name="pnlCurrency" value={formData.pnlCurrency} onChange={handleChange} type="number" className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                  <input name="pnlCurrency" value={formData.pnlCurrency} onChange={handleChange} type="number" className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Setup</label>
@@ -299,7 +315,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
                     name="setup"
                     value={formData.setup}
                     onChange={handleChange}
-                    className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
+                    className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
                   >
                     {profile.strategies.map(s => (
                       <option key={s} value={s}>{s}</option>
@@ -308,7 +324,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Emotion</label>
-                  <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30">
+                  <select name="emotion" value={formData.emotion} onChange={handleChange} className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30">
                     {EMOTIONS.map(e => <option key={e} value={e}>{e}</option>)}
                   </select>
                 </div>
@@ -316,7 +332,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
 
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">TradingView Chart URL</label>
-                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
+                <input name="chartUrl" value={formData.chartUrl} onChange={handleChange} type="url" placeholder="https://www.tradingview.com/x/..." className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30" />
               </div>
 
               <div className="space-y-1">
@@ -327,19 +343,19 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
                   value={formData.comment}
                   onChange={handleChange}
                   placeholder="Describe your thought process..."
-                  className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 min-h-[100px] resize-y"
+                  className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 min-h-[100px] resize-y"
                 />
               </div>
 
               <div className="p-3 bg-pip-dark/50 border border-pip-border rounded-lg flex justify-around text-center">
                 <div><p className="text-[10px] text-pip-muted uppercase">Planned R:R</p><p className="font-bold text-pip-gold">{calculations.rrRatio}</p></div>
-                <div><p className="text-[10px] text-pip-muted uppercase">Risk ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</p><p className="font-bold text-white">{calculations.risk}</p></div>
-                <div><p className="text-[10px] text-pip-muted uppercase">Reward ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</p><p className="font-bold text-white">{calculations.reward}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Risk ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</p><p className="font-bold text-pip-text">{calculations.risk}</p></div>
+                <div><p className="text-[10px] text-pip-muted uppercase">Reward ({formData.assetType === 'futures' ? 'Points' : 'Pips'})</p><p className="font-bold text-pip-text">{calculations.reward}</p></div>
               </div>
             </div >
 
             <div className="p-6 border-t border-pip-border flex justify-end gap-3">
-              <button onClick={onClose} className="px-4 py-2 text-pip-muted hover:text-white transition-colors">Cancel</button>
+              <button onClick={onClose} className="px-4 py-2 text-pip-muted hover:text-pip-text transition-colors">Cancel</button>
               <button
                 onClick={handleSave}
                 disabled={loading}

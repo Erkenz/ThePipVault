@@ -31,7 +31,7 @@ const SetupBreakdown = ({ trades }: { trades: Trade[] }) => {
 
   return (
     <div className="bg-pip-card border border-pip-border rounded-xl p-6">
-      <h3 className="text-lg font-bold text-white mb-6">Best Performing Setups</h3>
+      <h3 className="text-lg font-bold text-pip-text mb-6">Best Performing Setups</h3>
 
       <div className="space-y-6">
         {sortedSetups.length === 0 ? (
@@ -43,7 +43,7 @@ const SetupBreakdown = ({ trades }: { trades: Trade[] }) => {
             return (
               <div key={setup} className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium text-white">{setup}</span>
+                  <span className="font-medium text-pip-text">{setup}</span>
                   <div className="flex gap-3">
                     <span className={stats.pnl > 0 ? 'text-pip-green' : 'text-pip-red'}>
                       {stats.pnl > 0 ? '+' : ''}{stats.pnl.toFixed(viewMode === 'currency' ? 2 : 2)} {viewMode === 'currency' ? '$' : (viewMode === 'percentage' ? '%' : 'pips')}

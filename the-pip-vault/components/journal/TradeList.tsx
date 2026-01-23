@@ -29,7 +29,7 @@ const TradeList = () => {
         <div className="bg-pip-dark w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-pip-border">
           <Activity className="text-pip-muted" size={24} />
         </div>
-        <h3 className="text-lg font-medium text-white">Journal Empty</h3>
+        <h3 className="text-lg font-medium text-pip-text">Journal Empty</h3>
         <p className="text-pip-muted mt-2 text-sm">No trades logged yet.</p>
       </div>
     );
@@ -121,7 +121,7 @@ const TradeCard = ({ trade, onDelete, onEdit }: { trade: Trade; onDelete: (id: s
                 }}
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/image:opacity-100 transition-all">
-                <Maximize2 size={24} className="text-white transform scale-75 group-hover/image:scale-100 transition-transform" />
+                <Maximize2 size={24} className="text-pip-text transform scale-75 group-hover/image:scale-100 transition-transform" />
               </div>
             </a>
           ) : (
@@ -134,7 +134,7 @@ const TradeCard = ({ trade, onDelete, onEdit }: { trade: Trade; onDelete: (id: s
 
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-2">
-            <h3 className="text-xl font-bold text-white tracking-wide">{trade.pair}</h3>
+            <h3 className="text-xl font-bold text-pip-text tracking-wide">{trade.pair}</h3>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase border ${trade.direction === 'LONG' ? 'bg-pip-green/10 text-pip-green border-pip-green/20' : 'bg-pip-red/10 text-pip-red border-pip-red/20'}`}>
               {trade.direction}
             </span>
@@ -174,9 +174,9 @@ const TradeCard = ({ trade, onDelete, onEdit }: { trade: Trade; onDelete: (id: s
           )}
 
           <div className="grid grid-cols-3 gap-4 border-t border-pip-border pt-3">
-            <div><span className="text-[10px] text-pip-muted uppercase font-semibold">Entry</span><p className="text-white font-mono text-sm">{trade.entryPrice}</p></div>
+            <div><span className="text-[10px] text-pip-muted uppercase font-semibold">Entry</span><p className="text-pip-text font-mono text-sm">{trade.entryPrice}</p></div>
             <div><span className="text-[10px] text-pip-muted uppercase font-semibold">SL</span><p className="text-pip-muted font-mono text-sm">{trade.stopLoss}</p></div>
-            <div><span className="text-[10px] text-pip-muted uppercase font-semibold">TP</span><p className="text-white font-mono text-sm">{trade.takeProfit || '-'}</p></div>
+            <div><span className="text-[10px] text-pip-muted uppercase font-semibold">TP</span><p className="text-pip-text font-mono text-sm">{trade.takeProfit || '-'}</p></div>
           </div>
         </div>
 

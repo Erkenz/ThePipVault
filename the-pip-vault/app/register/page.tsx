@@ -82,15 +82,15 @@ export default function RegisterPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-pip-dark flex items-center justify-center p-6">
+            <div className="min-h-screen bg-background flex items-center justify-center p-6">
                 <div className="bg-pip-card border border-pip-border p-8 rounded-2xl max-w-md w-full text-center space-y-6">
                     <div className="w-20 h-20 bg-pip-green/20 rounded-full flex items-center justify-center mx-auto text-pip-green animate-in zoom-in">
                         <CheckCircle size={40} />
                     </div>
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-bold text-white">Check Your Email</h2>
+                        <h2 className="text-2xl font-bold text-pip-text">Check Your Email</h2>
                         <p className="text-pip-muted">
-                            We've sent a verification link to <span className="text-white font-medium">{formData.email}</span>.
+                            We've sent a verification link to <span className="text-pip-text font-medium">{formData.email}</span>.
                         </p>
                     </div>
                     <p className="text-sm text-pip-muted/70">
@@ -107,7 +107,7 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-pip-dark">
+        <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background">
 
             {/* Branding Section */}
             <div className="hidden lg:flex flex-col justify-between p-12 bg-linear-to-br from-pip-dark via-pip-dark to-pip-gold/10 border-r border-pip-border">
@@ -139,7 +139,7 @@ export default function RegisterPage() {
 
                 <div className="w-full max-w-100 space-y-8 relative z-10">
                     <div className="space-y-2">
-                        <h3 className="text-2xl font-bold text-white">Create Account</h3>
+                        <h3 className="text-2xl font-bold text-pip-text">Create Account</h3>
                         <p className="text-pip-muted">Enter your details to register.</p>
                     </div>
 
@@ -153,7 +153,7 @@ export default function RegisterPage() {
                                     type="text"
                                     value={formData.firstName}
                                     onChange={handleChange}
-                                    className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
+                                    className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
                                     placeholder="John"
                                 />
                             </div>
@@ -164,7 +164,7 @@ export default function RegisterPage() {
                                     type="text"
                                     value={formData.lastName}
                                     onChange={handleChange}
-                                    className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
+                                    className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
                                     placeholder="Doe"
                                 />
                             </div>
@@ -177,7 +177,7 @@ export default function RegisterPage() {
                                 type="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
+                                className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
                                 placeholder="trader@example.com"
                             />
                         </div>
@@ -189,7 +189,7 @@ export default function RegisterPage() {
                                 type="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
+                                className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
                                 placeholder="Min. 6 characters"
                             />
                         </div>

@@ -112,7 +112,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
 
             {/* 1. Profile Section */}
             <div className="bg-pip-card border border-pip-border rounded-2xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-pip-text mb-4 flex items-center gap-2">
                     <User className="text-pip-gold" size={20} /> Identity
                 </h2>
 
@@ -124,7 +124,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                                 type="text"
                                 value={formData.firstName}
                                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white outline-none focus:border-pip-gold"
+                                className="w-full bg-background border border-pip-border rounded-lg px-4 py-2 text-pip-text outline-none focus:border-pip-gold"
                             />
                         </div>
                         <div className="space-y-2">
@@ -133,7 +133,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                                 type="text"
                                 value={formData.lastName}
                                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white outline-none focus:border-pip-gold"
+                                className="w-full bg-background border border-pip-border rounded-lg px-4 py-2 text-pip-text outline-none focus:border-pip-gold"
                             />
                         </div>
                     </div>
@@ -146,7 +146,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                             type="text"
                             value={user.email}
                             readOnly
-                            className="w-full bg-pip-dark/50 border border-pip-border rounded-lg px-4 py-2 text-pip-muted outline-none cursor-not-allowed"
+                            className="w-full bg-pip-active/10 border border-pip-border rounded-lg px-4 py-2 text-pip-muted outline-none cursor-not-allowed"
                         />
                     </div>
 
@@ -165,7 +165,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
 
             {/* 2. Security Section (Change Password) */}
             <div className="bg-pip-card border border-pip-border rounded-xl p-6 shadow-sm">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-pip-text mb-4 flex items-center gap-2">
                     <Lock className="text-pip-gold" size={20} /> Security
                 </h2>
                 <form onSubmit={handlePasswordChange} className="space-y-4">
@@ -177,7 +177,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                                 value={passData.password}
                                 onChange={(e) => setPassData({ ...passData, password: e.target.value })}
                                 placeholder="••••••••"
-                                className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white outline-none focus:border-pip-gold"
+                                className="w-full bg-background border border-pip-border rounded-lg px-4 py-2 text-pip-text outline-none focus:border-pip-gold"
                             />
                         </div>
                         <div className="space-y-2">
@@ -187,7 +187,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                                 value={passData.confirm}
                                 onChange={(e) => setPassData({ ...passData, confirm: e.target.value })}
                                 placeholder="••••••••"
-                                className="w-full bg-pip-dark border border-pip-border rounded-lg px-4 py-2 text-white outline-none focus:border-pip-gold"
+                                className="w-full bg-background border border-pip-border rounded-lg px-4 py-2 text-pip-text outline-none focus:border-pip-gold"
                             />
                         </div>
                     </div>
@@ -195,7 +195,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                         <button
                             type="submit"
                             disabled={passLoading || !passData.password}
-                            className="bg-pip-dark border border-pip-border hover:border-pip-gold text-white font-bold px-6 py-2 rounded-lg flex items-center gap-2 transition-all disabled:opacity-50"
+                            className="bg-background border border-pip-border hover:border-pip-gold text-pip-text font-bold px-6 py-2 rounded-lg flex items-center gap-2 transition-all disabled:opacity-50"
                         >
                             {passLoading ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} />}
                             Update Password
@@ -220,7 +220,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
 
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="space-y-1">
-                        <h3 className="text-white font-medium">Delete Account</h3>
+                        <h3 className="text-pip-text font-medium">Delete Account</h3>
                         <p className="text-sm text-pip-muted">
                             This action is <span className="text-pip-red font-bold">irreversible</span>. It will permanently delete your profile, trades, and journal entries.
                         </p>
@@ -236,7 +236,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
             </div>
 
             <div className="flex justify-center pt-8">
-                <button onClick={handleSignOut} className="text-pip-muted hover:text-white flex items-center gap-2 transition-colors">
+                <button onClick={handleSignOut} className="text-pip-muted hover:text-pip-text flex items-center gap-2 transition-colors">
                     <LogOut size={16} /> Sign Out
                 </button>
             </div>
@@ -247,7 +247,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                     <div className="bg-pip-card border border-pip-border w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-6 relative animate-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setShowDeleteModal(false)}
-                            className="absolute top-4 right-4 text-pip-muted hover:text-white transition-colors"
+                            className="absolute top-4 right-4 text-pip-muted hover:text-pip-text transition-colors"
                         >
                             <X size={20} />
                         </button>
@@ -256,7 +256,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                             <div className="w-16 h-16 bg-pip-red/20 text-pip-red rounded-full flex items-center justify-center mb-2">
                                 <Trash2 size={32} />
                             </div>
-                            <h3 className="text-2xl font-bold text-white">Delete Account?</h3>
+                            <h3 className="text-2xl font-bold text-pip-text">Delete Account?</h3>
                             <p className="text-pip-muted">
                                 Are you absolutely sure? This action cannot be undone. All your data will be lost forever.
                             </p>
@@ -265,7 +265,7 @@ export default function AccountForm({ user, profile }: { user: any, profile: any
                         <div className="grid grid-cols-2 gap-3 pt-2">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="px-4 py-3 rounded-xl font-bold border border-pip-border hover:bg-pip-dark text-white transition-all"
+                                className="px-4 py-3 rounded-xl font-bold border border-pip-border hover:bg-pip-active text-pip-text transition-all"
                             >
                                 Cancel
                             </button>

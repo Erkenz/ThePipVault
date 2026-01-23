@@ -1,14 +1,14 @@
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-pip-dark text-pip-muted p-6 sm:p-12">
+        <div className="min-h-screen bg-background text-pip-muted p-6 sm:p-12">
             <div className="max-w-3xl mx-auto space-y-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
+                    <h1 className="text-3xl font-bold text-pip-text mb-2">Privacy Policy</h1>
                     <p className="text-sm text-pip-muted">Last updated: January 2025</p>
                 </div>
 
                 <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">1. Introduction</h2>
+                    <h2 className="text-xl font-bold text-pip-text">1. Introduction</h2>
                     <p>
                         Welcome to The PipVault ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data.
                         This privacy policy will inform you as to how we look after your personal data when you visit our website directly or use our application.
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
                 </section>
 
                 <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">2. The Data We Collect</h2>
+                    <h2 className="text-xl font-bold text-pip-text">2. The Data We Collect</h2>
                     <p>
                         We may collect, use, store and transfer different kinds of personal data about you which we have grouped together follows:
                     </p>
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
                 </section>
 
                 <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">3. How We Use Your Data</h2>
+                    <h2 className="text-xl font-bold text-pip-text">3. How We Use Your Data</h2>
                     <p>
                         We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:
                     </p>
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
                 </section>
 
                 <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">4. Data Security</h2>
+                    <h2 className="text-xl font-bold text-pip-text">4. Data Security</h2>
                     <p>
                         We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used or accessed in an unauthorized way, altered or disclosed.
                         We use Supabase for authentication and database services, which provides industry-standard security.
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
                 </section>
 
                 <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">5. Your Legal Rights (GDPR)</h2>
+                    <h2 className="text-xl font-bold text-pip-text">5. Your Legal Rights (GDPR)</h2>
                     <p>
                         Under certain circumstances, you have rights under data protection laws in relation to your personal data, including the right to:
                     </p>
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
                 </section>
 
                 <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">6. Contact Us</h2>
+                    <h2 className="text-xl font-bold text-pip-text">6. Contact Us</h2>
                     <p>
                         If you have any questions about this privacy policy or our privacy practices, please contact us at support@thepipvault.com.
                     </p>

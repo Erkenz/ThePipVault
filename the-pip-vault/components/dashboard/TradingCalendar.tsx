@@ -92,7 +92,7 @@ const TradingCalendar = ({ trades }: TradingCalendarProps) => {
           borderClass = "border-pip-red/50";
         } else {
           // Breakeven
-          textClass = "text-white";
+          textClass = "text-pip-text";
         }
       }
 
@@ -139,19 +139,19 @@ const TradingCalendar = ({ trades }: TradingCalendarProps) => {
     <div className="bg-pip-card border border-pip-border rounded-xl overflow-hidden shadow-sm">
       {/* Header: Maand Navigatie */}
       <div className="flex items-center justify-between p-6 border-b border-pip-border bg-pip-card/50">
-        <h3 className="text-xl font-bold text-white flex items-center gap-3">
+        <h3 className="text-xl font-bold text-pip-text flex items-center gap-3">
           <CalendarIcon className="text-pip-gold" size={24} />
           {MONTHS[currentDate.getMonth()]} <span className="text-pip-muted">{currentDate.getFullYear()}</span>
         </h3>
 
         <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="p-2 hover:bg-pip-dark rounded-lg text-pip-muted hover:text-white transition-colors">
+          <button onClick={prevMonth} className="p-2 hover:bg-pip-active rounded-lg text-pip-muted hover:text-pip-text transition-colors">
             <ChevronLeft size={20} />
           </button>
-          <button onClick={resetToToday} className="text-xs font-bold px-3 py-1.5 bg-pip-dark border border-pip-border rounded hover:border-pip-gold transition-colors text-pip-muted hover:text-white">
+          <button onClick={resetToToday} className="text-xs font-bold px-3 py-1.5 bg-pip-card border border-pip-border rounded hover:border-pip-gold transition-colors text-pip-muted hover:text-pip-text">
             Today
           </button>
-          <button onClick={nextMonth} className="p-2 hover:bg-pip-dark rounded-lg text-pip-muted hover:text-white transition-colors">
+          <button onClick={nextMonth} className="p-2 hover:bg-pip-active rounded-lg text-pip-muted hover:text-pip-text transition-colors">
             <ChevronRight size={20} />
           </button>
         </div>

@@ -5,8 +5,9 @@ import { Plus, LayoutDashboard, BookOpen, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 import AddTradeModal from '../modals/AddTradeModal';
 import Link from 'next/link';
-import UserMenu from './UserMenu'; // <--- Importeer het nieuwe menu
+import UserMenu from './UserMenu';
 import { useProfile } from '@/context/ProfileContext';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 const NavBar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,7 +25,7 @@ const NavBar = () => {
               <div className="w-8 h-8 bg-pip-gold rounded flex items-center justify-center">
                 <span className="text-pip-dark font-black text-xl">P</span>
               </div>
-              <span className="text-white font-bold tracking-tighter hidden sm:block uppercase">The PipVault</span>
+              <span className="text-pip-text font-bold tracking-tighter hidden sm:block uppercase">The PipVault</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-1">
@@ -45,6 +46,7 @@ const NavBar = () => {
 
             {/* HET NIEUWE USER MENU */}
             <UserMenu />
+            <ThemeToggle />
           </div>
         </div>
       </div>
@@ -58,7 +60,7 @@ const NavLink = ({ href, icon, label, active }: { href: string; icon: React.Reac
 
   <Link
     href={href}
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${active ? 'text-pip-gold bg-pip-gold/10' : 'text-pip-muted hover:text-white hover:bg-pip-dark'
+    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${active ? 'text-pip-gold bg-pip-gold/10' : 'text-pip-muted hover:text-pip-text hover:bg-pip-active'
       }`}
   >
     {icon}

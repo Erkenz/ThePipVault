@@ -12,7 +12,7 @@ export interface Trade {
   entryPrice: number;
   stopLoss: number;
   takeProfit?: number;
-  pnl: number;
+  pnl?: number;
   pnl_currency?: number;
   setup?: string;
   emotion?: string;

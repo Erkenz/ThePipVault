@@ -38,7 +38,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
         <p className="text-pip-muted text-xs mb-1 flex items-center gap-1">
           <Calendar size={12} /> {label}
         </p>
-        <p className="text-white font-bold text-lg">
+        <p className="text-pip-text font-bold text-lg">
           Equity: {data.equity > 0 ? '+' : ''}{data.equity.toFixed(2)}
         </p>
         <p className="text-pip-muted uppercase tracking-wider text-[10px] mb-1">Daily Trades</p>
@@ -106,7 +106,7 @@ const TradeRow = ({ trade, viewMode }: { trade: Trade, viewMode: string }) => {
     <div className="flex justify-between items-center text-[10px]">
       <span className="flex items-center gap-1">
         <span className={`w-1 h-1 rounded-full ${val > 0 ? 'bg-pip-green' : 'bg-pip-red'}`} />
-        <span className="text-white">{trade.pair}</span>
+        <span className="text-pip-text">{trade.pair}</span>
         <span className="text-pip-muted opacity-50">{trade.direction}</span>
       </span>
       <span className={`font-mono ${val > 0 ? 'text-pip-green' : 'text-pip-red'}`}>
@@ -208,7 +208,7 @@ const EquityChart = ({ trades }: EquityChartProps) => {
   return (
     <div className="bg-pip-card border border-pip-border p-6 rounded-xl shadow-sm flex flex-col h-112.5">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+        <h3 className="text-lg font-bold text-pip-text flex items-center gap-2">
           <TrendingUp size={20} className="text-pip-gold" />
           Equity Curve
         </h3>
@@ -230,16 +230,16 @@ const EquityChart = ({ trades }: EquityChartProps) => {
                   <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-pip-border)" vertical={false} />
               <XAxis
                 dataKey="date"
-                stroke="#666"
-                tick={{ fill: '#666', fontSize: 12 }}
+                stroke="var(--color-pip-muted)"
+                tick={{ fill: 'var(--color-pip-text)', fontSize: 12 }}
                 tickLine={false} axisLine={false} minTickGap={30}
               />
               <YAxis
-                stroke="#666"
-                tick={{ fill: '#666', fontSize: 12 }}
+                stroke="var(--color-pip-muted)"
+                tick={{ fill: 'var(--color-pip-text)', fontSize: 12 }}
                 tickLine={false} axisLine={false}
               />
               <Tooltip content={<CustomTooltip />} />

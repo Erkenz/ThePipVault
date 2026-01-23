@@ -69,7 +69,7 @@ const EmotionAnalysis = ({ trades }: { trades: Trade[] }) => {
 
   return (
     <div className="bg-pip-card border border-pip-border rounded-xl p-6 h-full flex flex-col">
-      <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+      <h3 className="text-lg font-bold text-pip-text mb-6 flex items-center gap-2">
         Emotion Impact
       </h3>
 
@@ -93,7 +93,7 @@ const EmotionAnalysis = ({ trades }: { trades: Trade[] }) => {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <Icon size={18} className={config.iconColor} />
-                    <span className="text-sm font-bold text-white tracking-wide">{emotion}</span>
+                    <span className="text-sm font-bold text-pip-text tracking-wide">{emotion}</span>
                   </div>
                   <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border bg-pip-dark/50 ${config.iconColor} border-current opacity-70`}>
                     {config.label}

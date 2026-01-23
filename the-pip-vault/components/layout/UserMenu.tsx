@@ -22,7 +22,7 @@ const UserMenu = () => {
 
   return (
     <div className="relative" ref={menuRef}>
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-pip-dark border border-transparent hover:border-pip-border transition-all"
       >
@@ -37,12 +37,12 @@ const UserMenu = () => {
           <div className="px-4 py-2 border-b border-pip-border mb-1">
             <p className="text-xs text-pip-muted uppercase font-bold tracking-widest">User Menu</p>
           </div>
-          
+
           <MenuLink href="/account" icon={<ShieldCheck size={16} />} label="Account Info" />
           <MenuLink href="/settings" icon={<Settings size={16} />} label="Settings" />
-          
+
           <div className="border-t border-pip-border mt-1 pt-1">
-            <button 
+            <button
               onClick={signOut}
               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-pip-red hover:bg-pip-red/10 transition-colors"
             >
@@ -57,9 +57,9 @@ const UserMenu = () => {
 };
 
 const MenuLink = ({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) => (
-  <Link 
-    href={href} 
-    className="flex items-center gap-2 px-4 py-2 text-sm text-pip-muted hover:text-white hover:bg-pip-dark transition-colors"
+  <Link
+    href={href}
+    className="flex items-center gap-2 px-4 py-2 text-sm text-pip-muted hover:text-pip-text hover:bg-pip-active transition-colors"
   >
     {icon}
     {label}

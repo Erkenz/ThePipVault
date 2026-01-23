@@ -38,7 +38,7 @@ export default function Home() {
       let value = 0;
 
       if (viewMode === 'pips') {
-        value = trade.pnl;
+        value = trade.pnl || 0;
       } else if (viewMode === 'currency') {
         value = trade.pnl_currency || 0;
       } else if (viewMode === 'percentage') {
@@ -55,8 +55,9 @@ export default function Home() {
         grossLoss += Math.abs(value);
       }
 
-      // Consistent Win Rate: Een trade is een 'Win' als Pips > 0
-      if (trade.pnl > 0) {
+      // Consistent Win Rate: Een trade is een 'Win' als Pips > 0 (of Currency > 0 als we dat willen, maar Pips is vaak cleaner)
+      // Als PnL undefined is (0), is het geen win.
+      if ((trade.pnl || 0) > 0) {
         winCount++;
       }
     });
@@ -96,7 +97,8 @@ export default function Home() {
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tighter italic">Dashboard</h1>
+          <h1 className="text-3xl font-black text-pip-text uppercase tracking-tighter italic">Dashboard</h1>
+
           <p className="text-pip-muted mt-1">
             Performance Command Center
           </p>
@@ -133,7 +135,7 @@ export default function Home() {
           subValue={`Based on ${stats.totalTrades} trades`}
           icon={Activity}
           trend={stats.winRate >= 50 ? 'up' : 'down'}
-          valueColor="text-white"
+          valueColor="text-pip-text"
         />
         <ProfitCard
           title="Profit Factor"
@@ -151,7 +153,7 @@ export default function Home() {
       {/* === ANALYTICS SECTION === */}
       {trades.length > 0 ? (
         <div className="pt-6 border-t border-pip-border space-y-6 animate-in slide-in-from-bottom-4 duration-700 delay-100">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-pip-text flex items-center gap-2">
             <PieChart size={20} className="text-pip-gold" />
             Analytics Overview
           </h2>

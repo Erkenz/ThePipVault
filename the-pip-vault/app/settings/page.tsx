@@ -159,7 +159,7 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
       <header>
-        <h1 className="text-3xl font-black text-white uppercase tracking-tighter italic">Command Center</h1>
+        <h1 className="text-3xl font-black text-pip-text uppercase tracking-tighter italic">Command Center</h1>
         <p className="text-pip-muted">Manage your trading capital and system preferences.</p>
       </header>
 
@@ -167,7 +167,7 @@ export default function SettingsPage() {
       {profile.starting_equity === 10000 && (
         <div className="bg-pip-gold/10 border border-pip-gold/20 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
           <AlertCircle className="text-pip-gold shrink-0" size={20} />
-          <p className="text-sm text-white/90">
+          <p className="text-sm text-pip-text/90">
             <strong>First time?</strong> Adjust your starting capital and click Save to activate your profile in the database.
           </p>
         </div>
@@ -180,14 +180,14 @@ export default function SettingsPage() {
         </h3>
 
         <div className="space-y-3">
-          <label className="text-sm font-bold text-white uppercase tracking-wider block">Asset Class Mode</label>
+          <label className="text-sm font-bold text-pip-text uppercase tracking-wider block">Asset Class Mode</label>
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => setAssetClass('forex')}
               type="button"
               className={`relative p-4 rounded-xl border-2 transition-all group ${assetClass === 'forex'
-                  ? 'bg-pip-gold/10 border-pip-gold text-white shadow-lg shadow-pip-gold/10'
-                  : 'bg-pip-dark border-pip-border text-pip-muted hover:border-pip-gold/50'
+                ? 'bg-pip-gold/10 border-pip-gold text-pip-text shadow-lg shadow-pip-gold/10'
+                : 'bg-background border-pip-border text-pip-muted hover:border-pip-gold/50'
                 }`}
             >
               <div className="flex flex-col items-center gap-2">
@@ -204,8 +204,8 @@ export default function SettingsPage() {
               onClick={() => setAssetClass('futures')}
               type="button"
               className={`relative p-4 rounded-xl border-2 transition-all group ${assetClass === 'futures'
-                  ? 'bg-pip-gold/10 border-pip-gold text-white shadow-lg shadow-pip-gold/10'
-                  : 'bg-pip-dark border-pip-border text-pip-muted hover:border-pip-gold/50'
+                ? 'bg-pip-gold/10 border-pip-gold text-pip-text shadow-lg shadow-pip-gold/10'
+                : 'bg-background border-pip-border text-pip-muted hover:border-pip-gold/50'
                 }`}
             >
               <div className="flex flex-col items-center gap-2">
@@ -219,7 +219,7 @@ export default function SettingsPage() {
             </button>
           </div>
           <p className="text-xs text-pip-muted mt-2">
-            Currently displaying: <strong className="text-white">{unitLabel}</strong>. This setting affects labels across the dashboard and journal.
+            Currently displaying: <strong className="text-pip-text">{unitLabel}</strong>. This setting affects labels across the dashboard and journal.
           </p>
         </div>
       </div>
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                 type="number"
                 value={equity}
                 onChange={(e) => setEquity(e.target.value)}
-                className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
+                className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30"
                 placeholder="10000"
               />
             </div>
@@ -248,7 +248,7 @@ export default function SettingsPage() {
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 appearance-none"
+                className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 appearance-none"
               >
                 <option value="USD">USD ($) - US Dollar</option>
                 <option value="EUR">EUR (€) - Euro</option>
@@ -269,8 +269,8 @@ export default function SettingsPage() {
                 key={session}
                 onClick={() => toggleSession(session)}
                 className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${selectedSessions.includes(session)
-                  ? 'border-pip-gold bg-pip-gold/5 text-white'
-                  : 'border-pip-border bg-pip-dark text-pip-muted hover:border-white/20'
+                  ? 'border-pip-gold bg-pip-gold/5 text-pip-text'
+                  : 'border-pip-border bg-background text-pip-muted hover:border-pip-text/20'
                   }`}
               >
                 <span className="font-bold tracking-tight">{session} Session</span>
@@ -297,7 +297,7 @@ export default function SettingsPage() {
             value={newStrategy}
             onChange={(e) => setNewStrategy(e.target.value)}
             placeholder="e.g. ICT Silver Bullet..."
-            className="w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 flex-1"
+            className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 flex-1"
           />
           <button
             onClick={addStrategy}
@@ -311,9 +311,9 @@ export default function SettingsPage() {
           {strategies.map((strat) => (
             <div
               key={strat}
-              className="flex items-center gap-2 bg-pip-dark border border-pip-border px-3 py-2 rounded-xl group"
+              className="flex items-center gap-2 bg-background border border-pip-border px-3 py-2 rounded-xl group"
             >
-              <span className="text-sm font-medium text-white">{strat}</span>
+              <span className="text-sm font-medium text-pip-text">{strat}</span>
               <button
                 onClick={() => removeStrategy(strat)}
                 className="text-pip-muted hover:text-pip-red transition-colors"
@@ -328,7 +328,7 @@ export default function SettingsPage() {
       {/* SAVE ACTIONS */}
       <div className="bg-pip-card border border-pip-border rounded-2xl shadow-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-center sm:text-left">
-          <p className="text-sm font-bold text-white uppercase italic">System Update</p>
+          <p className="text-sm font-bold text-pip-text uppercase italic">System Update</p>
           <p className="text-xs text-pip-muted">Changes directly affect Dashboard metrics.</p>
         </div>
         <button
@@ -344,13 +344,13 @@ export default function SettingsPage() {
       {/* TOOLS & MAINTENANCE */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-pip-border/50">
         <div className="space-y-4">
-          <h3 className="font-bold text-white uppercase flex items-center gap-2 italic">
+          <h3 className="font-bold text-pip-text uppercase flex items-center gap-2 italic">
             <Download size={18} className="text-pip-muted" /> Data Intelligence
           </h3>
           <p className="text-xs text-pip-muted">Export your full trading history to a CSV file for external analysis in Excel or Sheets.</p>
           <button
             onClick={handleExportCSV}
-            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+            className="w-full bg-pip-active hover:bg-pip-active/80 border border-pip-border text-pip-text py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
           >
             <Download size={18} /> DOWNLOAD CSV EXPORT
           </button>

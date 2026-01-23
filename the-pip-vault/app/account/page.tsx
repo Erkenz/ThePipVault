@@ -21,12 +21,12 @@ export default async function AccountPage() {
 
     // 3. Render Client Component with initial data
     return (
-        <div className="min-h-screen bg-pip-dark py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto space-y-8">
 
                 {/* Header */}
                 <div className="border-b border-pip-border pb-6">
-                    <h1 className="text-3xl font-black text-white uppercase tracking-tighter italic">Account Settings</h1>
+                    <h1 className="text-3xl font-black text-pip-text uppercase tracking-tighter italic">Account Settings</h1>
                     <p className="text-pip-muted">Manage your profile and account preferences.</p>
                 </div>
 

@@ -7,7 +7,7 @@ interface ProfitCardProps {
   subValue?: string;
   icon: LucideIcon;
   trend?: 'up' | 'down' | 'neutral';
-  valueColor?: string; 
+  valueColor?: string;
 }
 
 const ProfitCard = ({ title, value, subValue, icon: Icon, trend, valueColor }: ProfitCardProps) => {
@@ -19,7 +19,7 @@ const ProfitCard = ({ title, value, subValue, icon: Icon, trend, valueColor }: P
             {title}
           </h3>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className={`text-2xl font-bold ${valueColor ? valueColor : 'text-white'}`}>
+            <span className={`text-2xl font-bold ${valueColor ? valueColor : 'text-pip-text'}`}>
               {value}
             </span>
             {subValue && (
@@ -29,7 +29,7 @@ const ProfitCard = ({ title, value, subValue, icon: Icon, trend, valueColor }: P
             )}
           </div>
         </div>
-        
+
         <div className={`p-3 rounded-lg bg-pip-dark border border-pip-border 
           ${trend === 'up' ? 'text-pip-green' : trend === 'down' ? 'text-pip-red' : 'text-pip-gold'}`}>
           <Icon size={20} />

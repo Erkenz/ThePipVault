@@ -63,7 +63,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-pip-dark">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background">
 
       {/* Linker Kant: Branding */}
       <div className="hidden lg:flex flex-col justify-between p-12 bg-linear-to-br from-pip-dark via-pip-dark to-pip-gold/10 border-r border-pip-border">
@@ -95,7 +95,7 @@ export default function LoginPage() {
 
         <div className="w-full max-w-100 space-y-8 relative z-10">
           <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-white">Welcome Back</h3>
+            <h3 className="text-2xl font-bold text-pip-text">Welcome Back</h3>
             <p className="text-pip-muted">Enter your details to access your vault.</p>
           </div>
 
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
-                className={`w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 ${touched.email && errors.email ? '!border-pip-red' : ''}`}
+                className={`w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 ${touched.email && errors.email ? '!border-pip-red' : ''}`}
                 placeholder="trader@piplab.com"
               />
               {touched.email && errors.email && (
@@ -128,7 +128,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
-                className={`w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 ${touched.password && errors.password ? '!border-pip-red' : ''}`}
+                className={`w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 ${touched.password && errors.password ? '!border-pip-red' : ''}`}
                 placeholder="••••••••"
               />
               {touched.password && errors.password && (
