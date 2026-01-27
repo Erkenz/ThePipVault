@@ -20,14 +20,14 @@ describe('ViewToggle', () => {
 
     it('should render all options', () => {
         render(<ViewToggle />)
-        expect(screen.getByText('PIPS')).toBeInTheDocument()
-        expect(screen.getByText('PNL')).toBeInTheDocument()
-        expect(screen.getByText('%')).toBeInTheDocument()
+        expect(screen.getByTitle('Pips/Points')).toBeInTheDocument()
+        expect(screen.getByTitle('PnL ($)')).toBeInTheDocument()
+        expect(screen.getByTitle('Percentage')).toBeInTheDocument()
     })
 
     it('should call setViewMode on click', () => {
         render(<ViewToggle />)
-        fireEvent.click(screen.getByText('PNL'))
+        fireEvent.click(screen.getByTitle('PnL ($)'))
         expect(setViewModeMock).toHaveBeenCalledWith('currency')
     })
 })

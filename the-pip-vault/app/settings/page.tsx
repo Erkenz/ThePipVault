@@ -19,7 +19,8 @@ import {
   X,
   Settings,
   Activity,
-  TrendingUp
+  TrendingUp,
+  ListChecks
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -36,6 +37,8 @@ export default function SettingsPage() {
   const [showSaved, setShowSaved] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [assetClass, setAssetClass] = useState<'forex' | 'futures'>(profile.asset_class || 'forex');
+  const [accountTypes, setAccountTypes] = useState<string[]>(profile.account_types || ['Demo', 'Challenge', 'Funded', 'Live']);
+  const [newAccountType, setNewAccountType] = useState('');
 
   // Zorg dat lokale state synchroniseert als het profiel geladen is
   useEffect(() => {
@@ -44,6 +47,7 @@ export default function SettingsPage() {
     setSelectedSessions(profile.sessions);
     setStrategies(profile.strategies || []);
     setAssetClass(profile.asset_class || 'forex');
+    setAccountTypes(profile.account_types || ['Demo', 'Challenge', 'Funded', 'Live']);
   }, [profile]);
 
   // --- Handlers ---
@@ -56,7 +60,8 @@ export default function SettingsPage() {
         currency: currency,
         sessions: selectedSessions,
         strategies: strategies,
-        asset_class: assetClass
+        asset_class: assetClass,
+        account_types: accountTypes
       });
       setShowSaved(true);
       setTimeout(() => setShowSaved(false), 3000);
@@ -77,6 +82,17 @@ export default function SettingsPage() {
 
   const removeStrategy = (stratToRemove: string) => {
     setStrategies(strategies.filter(s => s !== stratToRemove));
+  };
+
+  const addAccountType = () => {
+    if (newAccountType.trim() && !accountTypes.includes(newAccountType.trim())) {
+      setAccountTypes([...accountTypes, newAccountType.trim()]);
+      setNewAccountType('');
+    }
+  };
+
+  const removeAccountType = (typeToRemove: string) => {
+    setAccountTypes(accountTypes.filter(t => t !== typeToRemove));
   };
 
   const handleExportCSV = () => {
@@ -107,7 +123,7 @@ export default function SettingsPage() {
       t.entryPrice.toString().replace('.', ','),
       (t.stopLoss || 0).toString().replace('.', ','),
       (t.takeProfit || 0).toString().replace('.', ','),
-      t.pnl.toString().replace('.', ','),
+      (t.pnl || 0).toString().replace('.', ','),
       (t.rrRatio || 0).toString().replace('.', ','),
       `"${t.setup || ""}"`,
       `"${t.emotion || ""}"`,
@@ -221,6 +237,48 @@ export default function SettingsPage() {
           <p className="text-xs text-pip-muted mt-2">
             Currently displaying: <strong className="text-pip-text">{unitLabel}</strong>. This setting affects labels across the dashboard and journal.
           </p>
+        </div>
+      </div>
+
+      {/* ACCOUNT TYPES SETTINGS */}
+      <div className="bg-pip-card border border-pip-border rounded-2xl shadow-lg p-6 space-y-6">
+        <h3 className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block text-pip-gold flex items-center gap-2 text-sm">
+          <ListChecks size={16} /> Account Types
+        </h3>
+        <p className="text-xs text-pip-muted">Manage the labels for your different trading accounts (e.g. Prop Firms, Personal).</p>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            value={newAccountType}
+            onChange={(e) => setNewAccountType(e.target.value)}
+            placeholder="e.g. My Forex Funds 50k..."
+            className="w-full bg-background border border-pip-border rounded-xl px-4 py-3 text-pip-text outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 flex-1"
+            onKeyDown={(e) => e.key === 'Enter' && addAccountType()}
+          />
+          <button
+            onClick={addAccountType}
+            className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-pip-gold/10"
+          >
+            <Plus size={18} /> ADD TYPE
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {accountTypes.map((type) => (
+            <div
+              key={type}
+              className="flex items-center gap-2 bg-background border border-pip-border px-3 py-2 rounded-xl group"
+            >
+              <span className="text-sm font-medium text-pip-text">{type}</span>
+              <button
+                onClick={() => removeAccountType(type)}
+                className="text-pip-muted hover:text-pip-red transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 

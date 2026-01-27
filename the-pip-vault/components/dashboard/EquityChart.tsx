@@ -90,7 +90,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 const TradeRow = ({ trade, viewMode }: { trade: Trade, viewMode: string }) => {
   const { profile } = useProfile();
-  let val = trade.pnl;
+  let val = trade.pnl || 0;
   let suffix = '';
   let prefix = '';
 

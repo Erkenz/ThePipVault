@@ -21,6 +21,11 @@ export interface Trade {
   rrRatio?: number;
   comment?: string;
   asset_type?: 'forex' | 'futures';
+  account_type?: string;
+  exit_date?: string;
+  commission?: number;
+  swap?: number;
+  gross_pnl?: number; // Mapped from pnl_currency in logic, but interface needs it if we use it explicitly? No, we mapped pnl_currency as gross.
 }
 
 interface TradeContextType {
@@ -78,7 +83,16 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           chartUrl: t.chart_url,
           rrRatio: t.rr_ratio ? Number(t.rr_ratio) : undefined,
           comment: t.trade_comment,
-          asset_type: t.asset_type || 'forex'
+          asset_type: t.asset_type || 'forex',
+          account_type: t.account_type || 'Standard',
+          exit_date: t.exit_date,
+          commission: Number(t.commission || 0),
+          swap: Number(t.swap || 0),
+          // We treat pnl_currency as GROSS PnL per user request
+          // pnl (Net) is what we usually use for charts.
+          // BUT: User said "gebruik de kolom pnl_currency als gross_pnl".
+          // So t.pnl_currency IS gross_pnl.
+          // And t.pnl IS Net PnL.
         }));
         setTrades(mappedTrades);
       }
@@ -128,7 +142,11 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         chart_url: newTradeData.chartUrl,
         rr_ratio: newTradeData.rrRatio,
         pnl_currency: newTradeData.pnl_currency,
-        trade_comment: newTradeData.comment // Insert comment
+        trade_comment: newTradeData.comment, // Insert comment
+        account_type: newTradeData.account_type,
+        exit_date: newTradeData.exit_date,
+        commission: newTradeData.commission,
+        swap: newTradeData.swap
       };
 
       const { data, error } = await supabase
@@ -152,7 +170,11 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         chartUrl: savedTradeRaw.chart_url,
         rrRatio: Number(savedTradeRaw.rr_ratio),
         pnl_currency: Number(savedTradeRaw.pnl_currency),
-        comment: savedTradeRaw.trade_comment
+        comment: savedTradeRaw.trade_comment,
+        account_type: savedTradeRaw.account_type,
+        exit_date: savedTradeRaw.exit_date,
+        commission: Number(savedTradeRaw.commission),
+        swap: Number(savedTradeRaw.swap)
       };
 
       setTrades((prev) => [savedTrade, ...prev]);
@@ -180,6 +202,10 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.comment !== undefined) tradeToUpdate.trade_comment = updatedData.comment;
       if (updatedData.date) tradeToUpdate.date = updatedData.date;
       if (updatedData.asset_type) tradeToUpdate.asset_type = updatedData.asset_type;
+      if (updatedData.account_type) tradeToUpdate.account_type = updatedData.account_type;
+      if (updatedData.exit_date) tradeToUpdate.exit_date = updatedData.exit_date;
+      if (updatedData.commission !== undefined) tradeToUpdate.commission = updatedData.commission;
+      if (updatedData.swap !== undefined) tradeToUpdate.swap = updatedData.swap;
 
       const { data, error } = await supabase
         .from('trades')
@@ -204,7 +230,11 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         pnl: Number(updatedTradeRaw.pnl),
         // ... map others properly potentially, or just optimistically update from updatedData + id/user_id preservation
         comment: updatedTradeRaw.trade_comment,
-        asset_type: updatedTradeRaw.asset_type
+        asset_type: updatedTradeRaw.asset_type,
+        account_type: updatedTradeRaw.account_type,
+        exit_date: updatedTradeRaw.exit_date,
+        commission: Number(updatedTradeRaw.commission),
+        swap: Number(updatedTradeRaw.swap)
       } : t));
     } catch (err) {
       console.error("Fout bij updaten trade:", err);

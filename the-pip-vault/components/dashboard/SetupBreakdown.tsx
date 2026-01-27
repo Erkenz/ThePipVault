@@ -16,7 +16,7 @@ const SetupBreakdown = ({ trades }: { trades: Trade[] }) => {
     let tradeValue = 0;
     if (viewMode === 'currency') tradeValue = trade.pnl_currency || 0;
     else if (viewMode === 'percentage') tradeValue = ((trade.pnl_currency || 0) / (profile.starting_equity || 1)) * 100;
-    else tradeValue = trade.pnl;
+    else tradeValue = trade.pnl || 0;
 
     acc[setup].total += 1;
     acc[setup].pnl += tradeValue;

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, LogOut, Trash2, AlertTriangle, Shield, User, Lock, X } from "lucide-react";
+import { Loader2, Save, LogOut, Trash2, AlertTriangle, Shield, User, Lock, X, ListChecks } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
 
 export default function AccountForm({ user, profile }: { user: any, profile: any }) {

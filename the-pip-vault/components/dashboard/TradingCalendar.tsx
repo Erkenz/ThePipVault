@@ -49,7 +49,7 @@ const TradingCalendar = ({ trades }: TradingCalendarProps) => {
         let tradeValue = 0;
         if (viewMode === 'currency') tradeValue = trade.pnl_currency || 0;
         else if (viewMode === 'percentage') tradeValue = ((trade.pnl_currency || 0) / (profile.starting_equity || 1)) * 100;
-        else tradeValue = trade.pnl;
+        else tradeValue = trade.pnl || 0;
 
         stats[day].pnl += tradeValue;
         stats[day].count += 1;

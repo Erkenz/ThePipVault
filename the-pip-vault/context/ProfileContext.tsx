@@ -12,6 +12,7 @@ interface Profile {
   strategies: string[];
   role: 'admin' | 'user';
   asset_class: 'forex' | 'futures';
+  account_types: string[];
 }
 
 interface ProfileContextType {
@@ -34,7 +35,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     sessions: ['London', 'New York', 'Asia'],
     strategies: ['Trend Continuation', 'Breakout', 'Reversal'],
     role: 'user',
-    asset_class: 'forex'
+    asset_class: 'forex',
+    account_types: ['Demo', 'Challenge', 'Funded', 'Live']
   });
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -60,7 +62,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
           sessions: data.sessions || [],
           strategies: data.strategies || ['Trend Continuation', 'Breakout', 'Reversal'],
           role: data.role || 'user',
-          asset_class: data.asset_class || 'forex'
+          asset_class: data.asset_class || 'forex',
+          account_types: data.account_types || ['Demo', 'Challenge', 'Funded', 'Live']
         });
       }
     } catch (err) {
@@ -110,7 +113,8 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
       starting_equity: 10000,
       currency: 'USD',
       sessions: ['London', 'New York', 'Asia'],
-      asset_class: 'forex'
+      asset_class: 'forex',
+      account_types: ['Demo', 'Challenge', 'Funded', 'Live']
     });
   };
 

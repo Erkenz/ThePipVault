@@ -56,7 +56,7 @@ const TradeCard = ({ trade, onDelete, onEdit }: { trade: Trade; onDelete: (id: s
   const { viewMode } = useSettings();
   const { profile } = useProfile();
 
-  let tradeValue = trade.pnl;
+  let tradeValue = trade.pnl || 0;
   // Use trade-specific asset type if available, otherwise fallback (though fetch should ensure default)
   const assetType = trade.asset_type || 'forex';
   let label = assetType === 'futures' ? 'Points' : 'Pips';
@@ -194,10 +194,10 @@ const TradeCard = ({ trade, onDelete, onEdit }: { trade: Trade; onDelete: (id: s
           )}
           <div className="flex items-center gap-3 mt-1">
             {trade.chartUrl && (
-              <a href={trade.chartUrl} target="_blank" rel="noreferrer" className="text-pip-muted hover:text-pip-gold p-1"><ExternalLink size={16} /></a>
+              <a href={trade.chartUrl} target="_blank" rel="noreferrer" aria-label="Open chart" className="text-pip-muted hover:text-pip-gold p-1"><ExternalLink size={16} /></a>
             )}
-            <button onClick={() => onEdit(trade)} className="text-pip-muted hover:text-pip-green p-1 transition-opacity"><Edit2 size={16} /></button>
-            <button onClick={() => onDelete(trade.id)} className="text-pip-muted hover:text-pip-red p-1 transition-opacity"><Trash2 size={16} /></button>
+            <button onClick={() => onEdit(trade)} aria-label="Edit trade" className="text-pip-muted hover:text-pip-green p-1 transition-opacity"><Edit2 size={16} /></button>
+            <button onClick={() => onDelete(trade.id)} aria-label="Delete trade" className="text-pip-muted hover:text-pip-red p-1 transition-opacity"><Trash2 size={16} /></button>
           </div>
         </div>
       </div>

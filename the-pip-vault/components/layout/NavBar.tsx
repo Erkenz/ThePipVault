@@ -30,6 +30,7 @@ const NavBar = () => {
 
             <div className="hidden md:flex items-center gap-1">
               <NavLink href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/'} />
+              <NavLink href="/analytics" icon={<BookOpen size={18} />} label="Analytics" active={pathname === '/analytics'} />
               <NavLink href="/journal" icon={<BookOpen size={18} />} label="Journal" active={pathname === '/journal'} />
               <AdminLink />
             </div>

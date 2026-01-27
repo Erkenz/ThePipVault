@@ -137,13 +137,7 @@ describe('TradeList', () => {
 
         render(<TradeList />)
 
-        // Find button clearly
-        const deleteButtons = screen.getAllByRole('button')
-        // Assuming the delete button is one of them. 
-        // In the simplified mock environment we need to be sure. 
-        // Usually TradeList has few buttons per row.
-        // Let's assume the first button is delete for this trade.
-        const deleteBtn = deleteButtons[0]
+        const deleteBtn = screen.getByRole('button', { name: /delete trade/i })
 
         fireEvent.click(deleteBtn)
         expect(deleteTradeMock).toHaveBeenCalledWith('1')
