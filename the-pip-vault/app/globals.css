@@ -1,75 +1,194 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- The PipLab Primitive Palette (Base Colors) --- */
-  --color-pip-gold: #d4af37;
-  --color-pip-gold-dim: #b8962e;
-  
-  --color-pip-dark-hex: #131722;
-  --color-pip-card-hex: #1E222D;
-  --color-pip-border-hex: #2A2E39;
-  --color-pip-text-hex: #D1D4DC;
-  
-  --color-pip-muted: #787D8F;
-  --color-pip-green: #089981;
-  --color-pip-red: #F23645;
+  /* --- The PipVault "Deep Space" Palette (Hypermodern) --- */
 
-  /* --- Semantic Colors (Dynamic) --- */
-  /* These map to Tailwind classes like bg-pip-dark, text-pip-text, etc. */
-  --color-pip-dark: var(--background);
+  /* Brand Accents */
+  --color-pip-primary: #2563EB;
+  /* Electric Blue */
+  --color-pip-primary-hover: #1d4ed8;
+  --color-pip-gold: #fbbf24;
+  /* Kept for legacy accents, slightly brighter */
+
+  /* Status Colors */
+  --color-pip-profit: #22c55e;
+  /* Vibrant Green */
+  --color-pip-loss: #ff4560;
+  /* Neon Red */
+  --color-pip-neutral: #94a3b8;
+
+  /* Dark Mode Palette (Deep Space) */
+  --color-pip-dark-bg: #0b0e14;
+  /* Deepest Void */
+  --color-pip-dark-card: #151a23;
+  /* Surface */
+  --color-pip-dark-border: #272e3b;
+  /* Subtle Border */
+  --color-pip-dark-text: #e2e8f0;
+  /* High Contrast Text */
+  --color-pip-dark-muted: #64748b;
+
+  /* Semantic Mappings */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card-bg);
+  --color-card-foreground: var(--card-fg);
+
+  --color-popover: var(--popover-bg);
+  --color-popover-foreground: var(--popover-fg);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-fg);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-fg);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-fg);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-fg);
+
+  --color-border: var(--border-color);
+  --color-input: var(--input-border);
+  --color-ring: var(--ring-color);
+
+  /* Legacy Compat */
   --color-pip-card: var(--card-bg);
   --color-pip-border: var(--border-color);
-  --color-pip-text: var(--text-primary);
-  --color-pip-active: var(--active-bg);
+  --color-pip-text: var(--foreground);
+  --color-pip-muted: var(--muted-fg);
+  --color-pip-active: var(--accent);
+  --color-pip-dark: var(--background);
 
   /* Font mappings */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* Light Mode Defaults */
+/* Light Mode Defaults -"Biomedical/Technical" feel */
 :root {
-  --background: #ffffff;
-  --card-bg: #f3f4f6; /* gray-100 */
-  --border-color: #e5e7eb; /* gray-200 */
-  --text-primary: #111827; /* gray-900 */
-  --active-bg: #e5e7eb; 
-  --foreground: #111827;
+  --background: #f8fafc;
+  /* Slate 50 */
+  --foreground: #0f172a;
+  /* Slate 900 */
+
+  --card-bg: #ffffff;
+  --card-fg: #0f172a;
+
+  --popover-bg: #ffffff;
+  --popover-fg: #0f172a;
+
+  --primary: #2563EB;
+  --primary-fg: #ffffff;
+
+  --secondary: #f1f5f9;
+  /* Slate 100 */
+  --secondary-fg: #1e293b;
+
+  --muted: #f1f5f9;
+  --muted-fg: #64748b;
+
+  --accent: #f1f5f9;
+  --accent-fg: #0f172a;
+
+  --destructive: #ef4444;
+  --destructive-fg: #ffffff;
+
+  --border-color: #e2e8f0;
+  /* Slate 200 */
+  --input-border: #e2e8f0;
+  --ring-color: #2563EB;
+
+  --radius: 0.75rem;
+
+  /* PipVault Specific Mappings for Backwards Compatibility */
+  --color-pip-card: var(--card-bg);
+  --color-pip-border: var(--border-color);
+  --color-pip-text: var(--foreground);
+  --color-pip-muted: var(--muted-fg);
+  --color-pip-active: var(--accent);
 }
 
-/* Dark Mode Overrides */
+/* Dark Mode Overrides - "Deep Space" */
 .dark {
-  --background: #131722;
-  --card-bg: #1E222D;
-  --border-color: #2A2E39;
-  --text-primary: #D1D4DC;
-  --active-bg: #2A2E39;
-  --foreground: #D1D4DC;
+  --background: #0b0e14;
+  /* Deep Void */
+  --foreground: #e2e8f0;
+  /* Slate 200 */
+
+  --card-bg: #151a23;
+  /* Dark Surface */
+  --card-fg: #e2e8f0;
+
+  --popover-bg: #151a23;
+  --popover-fg: #e2e8f0;
+
+  --primary: #3b82f6;
+  /* Blue 500 */
+  --primary-fg: #ffffff;
+
+  --secondary: #1e293b;
+  /* Slate 800 */
+  --secondary-fg: #f8fafc;
+
+  --muted: #1e293b;
+  --muted-fg: #94a3b8;
+  /* Slate 400 */
+
+  --accent: #1e293b;
+  --accent-fg: #f8fafc;
+
+  --destructive: #7f1d1d;
+  --destructive-fg: #f8fafc;
+
+  --border-color: #272e3b;
+  /* Manual Dark Border */
+  --input-border: #272e3b;
+  --ring-color: #1d4ed8;
 }
 
 body {
   background-color: var(--background);
-  color: var(--text-primary);
+  color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* --- Utilities --- */
+.glass-panel {
+  background: rgba(21, 26, 35, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(39, 46, 59, 0.5);
+}
+
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(to right, #3b82f6, #8b5cf6);
 }
 
 /* --- Pro Scrollbar Styling --- */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-pip-dark);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-pip-border);
-  border-radius: 4px;
+  background: var(--muted-fg);
+  border-radius: 99px;
+  opacity: 0.2;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-pip-gold);
+  background: var(--primary);
 }

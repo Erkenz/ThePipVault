@@ -3,26 +3,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import Home from '../page'
 
 // --- MOCK CHILD COMPONENTS ---
-vi.mock('@/components/dashboard/ProfitsCard', () => ({
-    default: ({ title, value, subValue }: any) => (
-        <div data-testid="profit-card">
-            <div data-testid="pc-title">{title}</div>
-            <div data-testid="pc-value">{value}</div>
-            <div data-testid="pc-sub">{subValue}</div>
-        </div>
-    )
-}))
-
+// Note: ProfitCard is not used in the page currently, keeping explicit mocks for other used components
 vi.mock('@/components/dashboard/EquityChart', () => ({
     default: ({ trades }: any) => <div data-testid="equity-chart">Trades: {trades.length}</div>
 }))
 
 vi.mock('@/components/dashboard/TradingCalendar', () => ({
     default: ({ trades }: any) => <div data-testid="trading-calendar">Calendar: {trades.length}</div>
-}))
-
-vi.mock('@/components/dashboard/ViewToggle', () => ({
-    default: () => <div data-testid="view-toggle">Toggle</div>
 }))
 
 vi.mock('@/components/dashboard/SetupBreakdown', () => ({
@@ -35,15 +22,12 @@ vi.mock('@/components/dashboard/EmotionAnalysis', () => ({
 
 // --- MOCK HOOKS ---
 const mockUseTrades = vi.fn()
-const mockUseSettings = vi.fn()
 const mockUseProfile = vi.fn()
 
 vi.mock('@/context/TradeContext', () => ({
     useTrades: () => mockUseTrades()
 }))
-vi.mock('@/context/SettingsContext', () => ({
-    useSettings: () => mockUseSettings()
-}))
+// SettingsContext is no longer used in Home
 vi.mock('@/context/ProfileContext', () => ({
     useProfile: () => mockUseProfile()
 }))
@@ -56,19 +40,16 @@ describe('Dashboard Page', () => {
             trades: [],
             loading: false,
         })
-        mockUseSettings.mockReturnValue({
-            viewMode: 'pips',
-        })
         mockUseProfile.mockReturnValue({
-            profile: { starting_equity: 10000 },
+            profile: { starting_equity: 10000, first_name: 'TestUser' },
         })
     })
 
-    it('should calculate and pass correct stats (Pips Mode)', async () => {
+    it('should display correct stats in Currency ($) mode always', async () => {
         const mockTrades = [{
             id: 't1',
-            pnl: 10,
-            pnl_currency: 100,
+            pnl: 10, // pips (should be ignored)
+            pnl_currency: 100, // currency (should be used)
             date: new Date().toISOString()
         }]
 
@@ -80,81 +61,25 @@ describe('Dashboard Page', () => {
         render(<Home />)
 
         await waitFor(() => {
-            const titles = screen.getAllByTestId('pc-title')
-            const values = screen.getAllByTestId('pc-value')
+            // Check for Net PnL text and value
+            expect(screen.getByText('Net PnL')).toBeInTheDocument()
 
-            // Find the "Net PnL" card
-            const pnlIndex = titles.findIndex(el => el.textContent === 'Net PnL')
-            expect(pnlIndex).not.toBe(-1)
-
-            // Value should contain "+10"
-            expect(values[pnlIndex]).toHaveTextContent('+10')
+            // The value should be formatted with $
+            const pnlValue = screen.getByText((content, element) => {
+                return element?.tagName.toLowerCase() === 'div' && content.includes('$100');
+            })
+            expect(pnlValue).toBeInTheDocument()
+            expect(pnlValue).toHaveTextContent('+$100')
         })
     })
 
-    it('should calculate and pass correct stats (Currency Mode)', async () => {
-        const mockTrades = [{
-            id: 't1',
-            pnl: 10,
-            pnl_currency: 100,
-            date: new Date().toISOString()
-        }]
-
+    it('should display loading state', () => {
         mockUseTrades.mockReturnValue({
-            trades: mockTrades,
-            loading: false,
-        })
-
-        mockUseSettings.mockReturnValue({
-            viewMode: 'currency',
+            trades: [],
+            loading: true,
         })
 
         render(<Home />)
-
-        await waitFor(() => {
-            const titles = screen.getAllByTestId('pc-title')
-            const values = screen.getAllByTestId('pc-value')
-
-            const pnlIndex = titles.findIndex(el => el.textContent === 'Net PnL')
-            // Should be "+$100" or similar
-            expect(values[pnlIndex]).toHaveTextContent('100')
-            expect(values[pnlIndex].textContent).toContain('$')
-        })
-    })
-
-    it('should calculate and pass correct stats (Percentage Mode)', async () => {
-        const mockTrades = [{
-            id: 't1',
-            pnl: 10,
-            pnl_currency: 100,
-            date: new Date().toISOString()
-        }]
-
-        mockUseTrades.mockReturnValue({
-            trades: mockTrades,
-            loading: false,
-        })
-
-        mockUseProfile.mockReturnValue({
-            profile: { starting_equity: 10000 },
-        })
-
-        mockUseSettings.mockReturnValue({
-            viewMode: 'percentage',
-        })
-
-        render(<Home />)
-
-        await waitFor(() => {
-            const titles = screen.getAllByTestId('pc-title')
-            const values = screen.getAllByTestId('pc-value')
-
-            // Title changes to "Return" in percentage mode
-            const returnIndex = titles.findIndex(el => el.textContent === 'Return')
-            expect(returnIndex).not.toBe(-1)
-
-            // Value should be "+1%"
-            expect(values[returnIndex]).toHaveTextContent('1%')
-        })
+        expect(screen.getByText(/Loading Dashboard/i)).toBeInTheDocument()
     })
 })

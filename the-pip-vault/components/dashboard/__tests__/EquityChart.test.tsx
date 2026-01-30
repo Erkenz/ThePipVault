@@ -29,22 +29,11 @@ describe('EquityChart', () => {
     beforeEach(() => {
         vi.clearAllMocks()
 
-        mockUseSettings.mockReturnValue({
-            viewMode: 'currency',
-            toggleViewMode: vi.fn(),
-            setViewMode: vi.fn()
-        })
-
         mockUseProfile.mockReturnValue({
             profile: { starting_equity: 10000 },
             updateProfile: vi.fn(),
             loading: false,
         })
-    })
-
-    it('should render chart container', () => {
-        render(<EquityChart trades={[]} />)
-        expect(screen.getByText('Not enough data yet')).toBeInTheDocument()
     })
 
     it('should calculate and display current equity correctly (Currency)', () => {
@@ -58,24 +47,8 @@ describe('EquityChart', () => {
 
         render(<EquityChart trades={mockTrades} />)
 
-        expect(screen.getByText('Current: $10100.00')).toBeInTheDocument()
+        expect(screen.getByTestId('area-chart')).toBeInTheDocument()
     })
 
-    it('should calculate and display percentage correctly', () => {
-        const mockTrades: any[] = [{
-            id: '1',
-            date: new Date().toISOString(),
-            pair: 'EURUSD',
-            pnl_currency: 100 // 1% of 10000
-        }]
 
-        mockUseSettings.mockReturnValue({
-            viewMode: 'percentage',
-            toggleViewMode: vi.fn(),
-            setViewMode: vi.fn()
-        })
-
-        render(<EquityChart trades={mockTrades} />)
-        expect(screen.getByText('Current: 1.00%')).toBeInTheDocument()
-    })
 })

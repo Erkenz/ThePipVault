@@ -1,5 +1,5 @@
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProfitCardProps {
   title: string;
@@ -12,29 +12,39 @@ interface ProfitCardProps {
 
 const ProfitCard = ({ title, value, subValue, icon: Icon, trend, valueColor }: ProfitCardProps) => {
   return (
-    <div className="bg-pip-card border border-pip-border p-6 rounded-xl shadow-sm hover:border-pip-gold/30 transition-all duration-300">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-pip-muted text-xs font-semibold uppercase tracking-wider">
-            {title}
-          </h3>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className={`text-2xl font-bold ${valueColor ? valueColor : 'text-pip-text'}`}>
-              {value}
-            </span>
-            {subValue && (
-              <span className="text-xs text-pip-muted">
-                {subValue}
-              </span>
-            )}
-          </div>
+    <div className="glass-panel rounded-2xl p-6 relative overflow-hidden group hover:border-primary/30 transition-all duration-300">
+      <div className="flex justify-between items-start mb-2">
+        <div className="p-2.5 bg-background/50 border border-border/50 rounded-xl">
+          <Icon size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
+        {trend && (
+          <div className={cn(
+            "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold border",
+            trend === 'up' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+              : trend === 'down' ? "bg-red-500/10 text-red-500 border-red-500/20"
+                : "bg-muted text-muted-foreground border-border"
+          )}>
+            {trend === 'up' ? <ArrowUpRight size={12} /> : trend === 'down' ? <ArrowDownRight size={12} /> : <Minus size={12} />}
+            {trend === 'up' ? 'GOOD' : trend === 'down' ? 'POOR' : 'NEUTRAL'}
+          </div>
+        )}
+      </div>
 
-        <div className={`p-3 rounded-lg bg-pip-dark border border-pip-border 
-          ${trend === 'up' ? 'text-pip-green' : trend === 'down' ? 'text-pip-red' : 'text-pip-gold'}`}>
-          <Icon size={20} />
+      <div className="space-y-1">
+        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{title}</h3>
+        <div className={cn(
+          "text-2xl font-black tracking-tight tabular-nums",
+          valueColor || "text-foreground"
+        )}>
+          {value}
         </div>
       </div>
+
+      {subValue && (
+        <p className="text-[10px] text-muted-foreground mt-3 font-medium opacity-80 group-hover:opacity-100 transition-opacity">
+          {subValue}
+        </p>
+      )}
     </div>
   );
 };

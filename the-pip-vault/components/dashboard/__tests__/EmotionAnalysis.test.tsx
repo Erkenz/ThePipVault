@@ -14,13 +14,12 @@ vi.mock('@/context/ProfileContext', () => ({
 
 describe('EmotionAnalysis', () => {
     beforeEach(() => {
-        mockUseSettings.mockReturnValue({ viewMode: 'pips' })
         mockUseProfile.mockReturnValue({ profile: { starting_equity: 10000 } })
     })
 
     it('should render empty state', () => {
         render(<EmotionAnalysis trades={[]} />)
-        expect(screen.getByText('No emotion data yet.')).toBeInTheDocument()
+        expect(screen.getByText('No emotion data recorded.')).toBeInTheDocument()
     })
 
     it('should render emotion stats', () => {
@@ -32,7 +31,7 @@ describe('EmotionAnalysis', () => {
         }]
         render(<EmotionAnalysis trades={mockTrades} />)
         expect(screen.getByText('Confident')).toBeInTheDocument()
-        expect(screen.getByText('Good Mindset')).toBeInTheDocument()
-        expect(screen.getByText('+50')).toBeInTheDocument()
+        expect(screen.getByText('Flow State')).toBeInTheDocument()
+        expect(screen.getByText('+$100.00')).toBeInTheDocument()
     })
 })
