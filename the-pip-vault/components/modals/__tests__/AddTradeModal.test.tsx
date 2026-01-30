@@ -47,12 +47,36 @@ describe('AddTradeModal', () => {
     it('should validate inputs before saving', async () => {
         render(<AddTradeModal isOpen={true} onClose={vi.fn()} />)
 
-        const saveBtn = screen.getByText('SAVE TRADE')
+        const saveBtn = screen.getByRole('button', { name: /save trade/i })
         fireEvent.click(saveBtn)
 
         await waitFor(() => {
             expect(screen.getByText(/Please fill in required fields/i)).toBeInTheDocument()
             expect(mockAddTrade).not.toHaveBeenCalled()
+        })
+    })
+
+    it('should calculate Planned and Realized RR', async () => {
+        const onClose = vi.fn()
+        render(<AddTradeModal isOpen={true} onClose={onClose} />)
+
+        // Fill Form
+        fireEvent.change(screen.getByPlaceholderText('EURUSD'), { target: { value: 'GBPUSD' } })
+        fireEvent.change(screen.getByLabelText(/Entry/i), { target: { value: '1.2000' } })
+        fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '1.1980' } }) // 20 pips risk
+        fireEvent.change(screen.getByLabelText(/Take Profit/i), { target: { value: '1.2040' } }) // 40 pips reward
+
+        // Check Planned RR (2.00)
+        await waitFor(() => {
+            expect(screen.getByText('2')).toBeInTheDocument()
+        })
+
+        // Enter Exit Price for Realized RR
+        fireEvent.change(screen.getByLabelText(/Exit Price/i), { target: { value: '1.2060' } }) // 60 pips realized
+
+        // Check Realized RR (3.00)
+        await waitFor(() => {
+            expect(screen.getByText('3R')).toBeInTheDocument()
         })
     })
 

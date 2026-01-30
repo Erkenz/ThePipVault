@@ -59,11 +59,11 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
           last_name: data.last_name || '',
           starting_equity: Number(data.starting_equity),
           currency: data.currency,
-          sessions: data.sessions || [],
-          strategies: data.strategies || ['Trend Continuation', 'Breakout', 'Reversal'],
+          sessions: Array.isArray(data.sessions) ? data.sessions : [],
+          strategies: Array.isArray(data.strategies) ? data.strategies : ['Trend Continuation', 'Breakout', 'Reversal'],
           role: data.role || 'user',
           asset_class: data.asset_class || 'forex',
-          account_types: data.account_types || ['Demo', 'Challenge', 'Funded', 'Live']
+          account_types: Array.isArray(data.account_types) ? data.account_types : ['Demo', 'Challenge', 'Funded', 'Live']
         });
       }
     } catch (err) {

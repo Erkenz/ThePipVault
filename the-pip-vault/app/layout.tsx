@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "../components/layout/NavBar";
+import Sidebar from "../components/layout/Sidebar";
 import { TradeProvider } from "../context/TradeContext"
 import { ProfileProvider } from "@/context/ProfileContext";
 import { SettingsProvider } from "@/context/SettingsContext";
@@ -41,10 +41,12 @@ export default function RootLayout({
           <ProfileProvider>
             <SettingsProvider>
               <TradeProvider>
-                <Navbar />
-                <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                  {children}
-                </main>
+                <div className="flex min-h-screen bg-background text-foreground">
+                  <Sidebar />
+                  <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-6 py-6 transition-all duration-300">
+                    {children}
+                  </main>
+                </div>
               </TradeProvider>
             </SettingsProvider>
           </ProfileProvider>

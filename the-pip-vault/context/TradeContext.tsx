@@ -10,6 +10,7 @@ export interface Trade {
   pair: string;
   direction: 'LONG' | 'SHORT';
   entryPrice: number;
+  exitPrice?: number;
   stopLoss: number;
   takeProfit?: number;
   pnl?: number;
@@ -25,7 +26,7 @@ export interface Trade {
   exit_date?: string;
   commission?: number;
   swap?: number;
-  gross_pnl?: number; // Mapped from pnl_currency in logic, but interface needs it if we use it explicitly? No, we mapped pnl_currency as gross.
+  gross_pnl?: number;
 }
 
 interface TradeContextType {
@@ -73,6 +74,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           pair: t.pair,
           direction: t.direction,
           entryPrice: Number(t.entry_price),
+          exitPrice: t.exit_price ? Number(t.exit_price) : undefined,
           stopLoss: Number(t.stop_loss),
           takeProfit: t.take_profit ? Number(t.take_profit) : undefined,
           pnl: Number(t.pnl),
@@ -89,10 +91,6 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           commission: Number(t.commission || 0),
           swap: Number(t.swap || 0),
           // We treat pnl_currency as GROSS PnL per user request
-          // pnl (Net) is what we usually use for charts.
-          // BUT: User said "gebruik de kolom pnl_currency als gross_pnl".
-          // So t.pnl_currency IS gross_pnl.
-          // And t.pnl IS Net PnL.
         }));
         setTrades(mappedTrades);
       }
@@ -134,6 +132,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         pair: newTradeData.pair,
         direction: newTradeData.direction,
         entry_price: newTradeData.entryPrice,
+        exit_price: newTradeData.exitPrice,
         stop_loss: newTradeData.stopLoss,
         take_profit: newTradeData.takeProfit,
         pnl: newTradeData.pnl,
@@ -165,6 +164,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       const savedTrade: Trade = {
         ...savedTradeRaw,
         entryPrice: Number(savedTradeRaw.entry_price),
+        exitPrice: savedTradeRaw.exit_price ? Number(savedTradeRaw.exit_price) : undefined,
         stopLoss: Number(savedTradeRaw.stop_loss),
         takeProfit: Number(savedTradeRaw.take_profit),
         chartUrl: savedTradeRaw.chart_url,
@@ -190,6 +190,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.pair) tradeToUpdate.pair = updatedData.pair;
       if (updatedData.direction) tradeToUpdate.direction = updatedData.direction;
       if (updatedData.entryPrice) tradeToUpdate.entry_price = updatedData.entryPrice;
+      if (updatedData.exitPrice !== undefined) tradeToUpdate.exit_price = updatedData.exitPrice;
       if (updatedData.stopLoss) tradeToUpdate.stop_loss = updatedData.stopLoss;
       if (updatedData.takeProfit !== undefined) tradeToUpdate.take_profit = updatedData.takeProfit;
       if (updatedData.pnl) tradeToUpdate.pnl = updatedData.pnl;
@@ -226,6 +227,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         // Better to use the returned data to be sure
         pair: updatedTradeRaw.pair,
         entryPrice: Number(updatedTradeRaw.entry_price),
+        exitPrice: updatedTradeRaw.exit_price ? Number(updatedTradeRaw.exit_price) : undefined,
         stopLoss: Number(updatedTradeRaw.stop_loss),
         pnl: Number(updatedTradeRaw.pnl),
         // ... map others properly potentially, or just optimistically update from updatedData + id/user_id preservation

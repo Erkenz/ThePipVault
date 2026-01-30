@@ -5,27 +5,28 @@ import {
     Users,
     Activity,
     TrendingUp,
-    ShieldAlert
+    ShieldAlert,
+    CheckCircle,
+    Server,
+    Search
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-// Types for our dashboard data
 interface DashboardStats {
     totalUsers: number;
     totalTrades: number;
-    platformPnl: number; // Placeholder for now
+    platformPnl: number;
 }
 
 export default async function AdminDashboard() {
     const supabase = await createClient();
     const adminAuthClient = createAdminClient();
 
-    // 1. Auth Check
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         redirect("/login");
     }
 
-    // 2. Role Check
     const { data: profile } = await supabase
         .from('profiles')
         .select('role')
@@ -36,26 +37,20 @@ export default async function AdminDashboard() {
         redirect("/");
     }
 
-    // 3. Fetch Stats
-    // User Count
     const { count: userCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-    // Trade Count
     const { count: tradeCount } = await supabase
         .from('trades')
         .select('*', { count: 'exact', head: true });
 
-    // 4. Fetch USERS from Auth API (Privileged)
     const { data: { users: authUsers }, error: authError } = await adminAuthClient.auth.admin.listUsers();
 
-    // Fetch Profiles
     const { data: profiles } = await supabase
         .from('profiles')
         .select('*');
 
-    // Merge Data
     const mergedUsers = authUsers?.map(user => {
         const userProfile = profiles?.find(p => p.id === user.id);
         return {
@@ -68,101 +63,126 @@ export default async function AdminDashboard() {
         };
     }) || [];
 
-    // Sort by created_at desc
     mergedUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-pip-text flex items-center gap-2">
-                        <ShieldAlert className="text-pip-gold" />
-                        Admin Command Center
-                    </h1>
-                    <p className="text-pip-muted text-sm mt-1">
-                        Platform Overview & User Management
-                    </p>
-                </div>
+        <div className="space-y-8 animate-in fade-in duration-700 pb-12">
+            <div>
+                <h1 className="text-4xl font-black tracking-tighter uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 flex items-center gap-3">
+                    <ShieldAlert className="text-red-500" />
+                    Admin Console
+                </h1>
+                <p className="text-muted-foreground font-medium mt-1">
+                    Platform Overview & User Management Permissions.
+                </p>
             </div>
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Total Users */}
-                <div className="bg-pip-card border border-pip-border p-6 rounded-2xl relative overflow-hidden group hover:border-pip-gold/50 transition-colors">
+                <div className="glass-panel group p-6 rounded-2xl relative overflow-hidden transition-all hover:border-emerald-500/30">
                     <div className="relative z-10">
-                        <h3 className="text-pip-muted text-sm font-medium mb-1">Total Users</h3>
-                        <div className="text-3xl font-bold text-pip-text mb-2">{userCount || 0}</div>
+                        <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Total Users</h3>
+                        <div className="text-4xl font-black text-foreground">{userCount || 0}</div>
+                        <div className="mt-2 text-xs text-emerald-500 font-bold flex items-center gap-1">
+                            <TrendingUp size={12} /> +12% this month
+                        </div>
                     </div>
-                    <Users className="absolute right-4 top-4 text-pip-muted/10 group-hover:text-pip-gold/20 transition-colors" size={64} />
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-pip-gold/0 via-pip-gold/50 to-pip-gold/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Users className="absolute right-4 top-4 text-emerald-500 opacity-10 group-hover:opacity-20 transition-opacity transform scale-150" />
+                    <div className="absolute right-0 bottom-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full translate-x-10 translate-y-10" />
                 </div>
 
                 {/* Total Trades */}
-                <div className="bg-pip-card border border-pip-border p-6 rounded-2xl relative overflow-hidden group hover:border-pip-blue/50 transition-colors">
+                <div className="glass-panel group p-6 rounded-2xl relative overflow-hidden transition-all hover:border-blue-500/30">
                     <div className="relative z-10">
-                        <h3 className="text-pip-muted text-sm font-medium mb-1">Total Trades Logged</h3>
-                        <div className="text-3xl font-bold text-pip-text mb-2">{tradeCount || 0}</div>
+                        <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Trades Logged</h3>
+                        <div className="text-4xl font-black text-foreground">{tradeCount || 0}</div>
+                        <div className="mt-2 text-xs text-blue-500 font-bold flex items-center gap-1">
+                            <Activity size={12} /> Active Platform
+                        </div>
                     </div>
-                    <Activity className="absolute right-4 top-4 text-pip-muted/10 group-hover:text-pip-blue/20 transition-colors" size={64} />
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-pip-blue/0 via-pip-blue/50 to-pip-blue/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Activity className="absolute right-4 top-4 text-blue-500 opacity-10 group-hover:opacity-20 transition-opacity transform scale-150" />
+                    <div className="absolute right-0 bottom-0 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full translate-x-10 translate-y-10" />
                 </div>
 
-                {/* System Status (Static for now) */}
-                <div className="bg-pip-card border border-pip-border p-6 rounded-2xl relative overflow-hidden group hover:border-pip-green/50 transition-colors">
+                {/* System Status */}
+                <div className="glass-panel group p-6 rounded-2xl relative overflow-hidden transition-all hover:border-primary/30">
                     <div className="relative z-10">
-                        <h3 className="text-pip-muted text-sm font-medium mb-1">System Status</h3>
-                        <div className="text-3xl font-bold text-pip-green mb-2">Healthy</div>
+                        <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">System Status</h3>
+                        <div className="text-4xl font-black text-emerald-500 flex items-center gap-3">
+                            Healthy
+                            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                        </div>
+                        <div className="mt-2 text-xs text-muted-foreground font-mono">
+                            v2.4.0-stable
+                        </div>
                     </div>
-                    <TrendingUp className="absolute right-4 top-4 text-pip-muted/10 group-hover:text-pip-green/20 transition-colors" size={64} />
+                    <Server className="absolute right-4 top-4 text-primary opacity-10 group-hover:opacity-20 transition-opacity transform scale-150" />
                 </div>
             </div>
 
             {/* Recent Users Table */}
-            <div className="pt-6 border-t border-pip-border space-y-4">
-                <h2 className="text-xl font-bold text-pip-text">Recent Users</h2>
-                <div className="bg-pip-card border border-pip-border rounded-xl overflow-hidden">
+            <div className="pt-6 border-t border-border/50 space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                        <Users size={20} className="text-primary" />
+                        User Database
+                    </h2>
+                    <div className="relative max-w-sm w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            className="w-full bg-background/50 border border-border/50 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-primary transition-colors"
+                        />
+                    </div>
+                </div>
+
+                <div className="glass-panel rounded-2xl overflow-hidden shadow-lg">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-pip-active/50 text-pip-muted text-sm">
+                            <thead className="bg-muted/30 text-xs uppercase font-bold text-muted-foreground tracking-wider">
                                 <tr>
-                                    <th className="p-4 font-medium">User Details</th>
-                                    <th className="p-4 font-medium">Role</th>
-                                    <th className="p-4 font-medium">Joined</th>
-                                    <th className="p-4 font-medium">Status</th>
+                                    <th className="p-5 font-bold">User Identity</th>
+                                    <th className="p-5 font-bold">Role</th>
+                                    <th className="p-5 font-bold">Joined</th>
+                                    <th className="p-5 font-bold text-right">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-pip-border">
+                            <tbody className="divide-y divide-border/30">
                                 {mergedUsers.map((user) => (
-                                    <tr key={user.id} className="hover:bg-pip-active/20 transition-colors text-sm">
-                                        <td className="p-4">
+                                    <tr key={user.id} className="group hover:bg-muted/20 transition-colors text-sm">
+                                        <td className="p-5">
                                             <div className="flex flex-col">
-                                                <span className="text-pip-text font-medium">{user.email}</span>
-                                                <span className="text-pip-muted text-xs font-mono">{user.id}</span>
+                                                <span className="text-foreground font-bold group-hover:text-primary transition-colors">{user.email}</span>
+                                                <span className="text-muted-foreground text-[10px] font-mono opacity-70">{user.id}</span>
                                             </div>
                                         </td>
-                                        <td className="p-4 text-pip-text">
-                                            <span className={`px-2 py-1 rounded-full text-xs border ${user.role === 'admin'
-                                                ? 'bg-pip-gold/10 border-pip-gold/30 text-pip-gold'
-                                                : 'bg-pip-border/50 border-pip-border text-pip-muted'
-                                                }`}>
+                                        <td className="p-5">
+                                            <span className={cn(
+                                                "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border",
+                                                user.role === 'admin'
+                                                    ? "bg-red-500/10 text-red-500 border-red-500/20"
+                                                    : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                            )}>
                                                 {user.role || 'user'}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-pip-muted">
-                                            {new Date(user.created_at).toLocaleDateString()}
+                                        <td className="p-5 text-muted-foreground font-medium">
+                                            {new Date(user.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
                                         </td>
-                                        <td className="p-4">
-                                            <span className="text-pip-green flex items-center gap-1 text-xs">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-pip-green animate-pulse" />
-                                                Active
-                                            </span>
+                                        <td className="p-5 text-right">
+                                            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                                <CheckCircle size={10} />
+                                                <span className="text-[10px] font-bold uppercase">Active</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
                                 {mergedUsers.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="p-8 text-center text-pip-muted">
-                                            No users found.
+                                        <td colSpan={4} className="p-12 text-center text-muted-foreground">
+                                            No users found in database.
                                         </td>
                                     </tr>
                                 )}

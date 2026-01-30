@@ -11,17 +11,17 @@ export default async function AnalyticsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background text-pip-text">
-            <div className="p-6">
-                <div className="mb-6 flex justify-between items-end">
-                    <div>
-                        <h1 className="text-3xl font-black text-pip-text uppercase tracking-tighter italic">Analytics</h1>
-                        <p className="text-pip-muted">Deep dive into your trading performance.</p>
-                    </div>
-                </div>
-
-                <AnalyticsDashboard />
+        <div className="space-y-8 animate-in fade-in duration-700 pb-12">
+            <div>
+                <h1 className="text-4xl font-black tracking-tighter uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-foreground to-muted-foreground">
+                    Analytics Deep Dive
+                </h1>
+                <p className="text-muted-foreground font-medium mt-1">
+                    Advanced performance metrics and statistical breakdown.
+                </p>
             </div>
+
+            <AnalyticsDashboard />
         </div>
     );
 }
