@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { Plus, BookOpen, Filter } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 import TradeList from '../../components/journal/TradeList';
 import AddTradeModal from '../../components/modals/AddTradeModal';
-import { cn } from "@/lib/utils";
 
 export default function JournalPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,12 +23,6 @@ export default function JournalPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Placeholder Filter Button */}
-          <button className="flex items-center gap-2 px-4 py-2 border border-border/50 rounded-xl text-sm font-semibold hover:bg-muted/50 transition-colors bg-card/30 backdrop-blur-sm">
-            <Filter size={16} />
-            <span>Filter</span>
-          </button>
-
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-primary/20"

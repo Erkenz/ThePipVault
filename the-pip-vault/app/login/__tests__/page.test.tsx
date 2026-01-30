@@ -36,11 +36,11 @@ describe('Login Page', () => {
 
     it('should render login form', () => {
         render(<LoginPage />)
-        // Check for placeholder text (updated to match page.tsx)
-        expect(screen.getByPlaceholderText('trader@piplab.com')).toBeInTheDocument()
+        // Check for reference elements
+        expect(screen.getByPlaceholderText('trader@example.com')).toBeInTheDocument()
         expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument()
-        // Check for LOGIN text
-        expect(screen.getByText('LOGIN')).toBeInTheDocument()
+        // Check for AUTHENTICATE text in button
+        expect(screen.getByRole('button', { name: /AUTHENTICATE/i })).toBeInTheDocument()
     })
 
     it('should handle login submission', async () => {
@@ -48,11 +48,11 @@ describe('Login Page', () => {
         render(<LoginPage />)
 
         // Fill form
-        fireEvent.change(screen.getByPlaceholderText('trader@piplab.com'), { target: { value: 'test@test.com' } })
+        fireEvent.change(screen.getByPlaceholderText('trader@example.com'), { target: { value: 'test@test.com' } })
         fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password' } })
 
         // Submit
-        const button = screen.getByRole('button', { name: /LOGIN/i })
+        const button = screen.getByRole('button', { name: /AUTHENTICATE/i })
         fireEvent.click(button)
 
         await waitFor(() => {
@@ -66,14 +66,14 @@ describe('Login Page', () => {
         render(<LoginPage />)
 
         // Fill form
-        fireEvent.change(screen.getByPlaceholderText('trader@piplab.com'), { target: { value: 'test@test.com' } })
+        fireEvent.change(screen.getByPlaceholderText('trader@example.com'), { target: { value: 'test@test.com' } })
         fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'wrongpassword' } })
 
         // Submit
-        fireEvent.click(screen.getByRole('button', { name: /LOGIN/i }))
+        fireEvent.click(screen.getByRole('button', { name: /AUTHENTICATE/i }))
 
         await waitFor(() => {
-            expect(screen.getByText('Login failed. Please check your credentials.')).toBeInTheDocument()
+            expect(screen.getByText('Invalid credentials.')).toBeInTheDocument()
         })
     })
 })

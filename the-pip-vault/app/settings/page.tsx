@@ -329,7 +329,7 @@ export default function SettingsPage() {
               placeholder="e.g. ICT Silver Bullet"
               className="flex-1 bg-background/50 border border-border rounded-xl px-4 py-2 text-sm outline-none focus:border-primary transition-colors"
             />
-            <button onClick={addStrategy} className="bg-primary hover:bg-primary/90 text-white p-2.5 rounded-xl transition-colors">
+            <button onClick={addStrategy} aria-label="Add Strategy" className="bg-primary hover:bg-primary/90 text-white p-2.5 rounded-xl transition-colors">
               <Plus size={18} />
             </button>
           </div>
@@ -338,7 +338,7 @@ export default function SettingsPage() {
             {(Array.isArray(strategies) ? strategies : []).map((strat) => (
               <div key={strat} className="group flex items-center gap-2 bg-background/50 border border-border px-3 py-1.5 rounded-lg text-sm text-foreground/80 hover:border-primary/30 transition-colors">
                 {strat}
-                <button onClick={() => removeStrategy(strat)} className="text-muted-foreground hover:text-destructive transition-colors">
+                <button onClick={() => removeStrategy(strat)} aria-label={`Remove ${strat}`} className="text-muted-foreground hover:text-destructive transition-colors">
                   <X size={14} />
                 </button>
               </div>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
               placeholder="e.g. Prop Firm - 100k"
               className="flex-1 bg-background/50 border border-border rounded-xl px-4 py-2 text-sm outline-none focus:border-primary transition-colors"
             />
-            <button onClick={addAccountType} className="bg-primary hover:bg-primary/90 text-white p-2.5 rounded-xl transition-colors">
+            <button onClick={addAccountType} aria-label="Add Account Type" className="bg-primary hover:bg-primary/90 text-white p-2.5 rounded-xl transition-colors">
               <Plus size={18} />
             </button>
           </div>
@@ -368,7 +368,7 @@ export default function SettingsPage() {
             {(Array.isArray(accountTypes) ? accountTypes : []).map((type) => (
               <div key={type} className="group flex items-center gap-2 bg-background/50 border border-border px-3 py-1.5 rounded-lg text-sm text-foreground/80 hover:border-primary/30 transition-colors">
                 {type}
-                <button onClick={() => removeAccountType(type)} className="text-muted-foreground hover:text-destructive transition-colors">
+                <button onClick={() => removeAccountType(type)} aria-label={`Remove ${type}`} className="text-muted-foreground hover:text-destructive transition-colors">
                   <X size={14} />
                 </button>
               </div>

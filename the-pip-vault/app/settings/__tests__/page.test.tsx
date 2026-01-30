@@ -53,7 +53,7 @@ describe('Settings Page', () => {
     it('should render settings form correctly', () => {
         render(<SettingsPage />)
         expect(screen.getByText(/Command Center/i)).toBeInTheDocument()
-        expect(screen.getByText(/Account Capital/i)).toBeInTheDocument()
+        expect(screen.getByText(/Account Parameters/i)).toBeInTheDocument()
 
         // Check Equity Input
         const equityInput = screen.getByDisplayValue('10000') // string matched
@@ -77,7 +77,7 @@ describe('Settings Page', () => {
         const equityInput = screen.getByDisplayValue('10000')
         fireEvent.change(equityInput, { target: { value: '50000' } })
 
-        const saveButton = screen.getByText(/SAVE CONFIGURATION/i)
+        const saveButton = screen.getByText(/SAVE CHANGES/i)
         fireEvent.click(saveButton)
 
         await waitFor(() => {
@@ -93,7 +93,7 @@ describe('Settings Page', () => {
         const input = screen.getByPlaceholderText(/e.g. ICT Silver Bullet/i)
         fireEvent.change(input, { target: { value: 'Scalping' } })
 
-        const addButton = screen.getByText(/ADD STRATEGY/i)
+        const addButton = screen.getByRole('button', { name: /Add Strategy/i })
         fireEvent.click(addButton)
 
         // Validation: Should appear in list
@@ -103,7 +103,7 @@ describe('Settings Page', () => {
     it('should open reset modal on request', () => {
         render(<SettingsPage />)
 
-        const resetButton = screen.getByText(/RESET TRADE HISTORY/i)
+        const resetButton = screen.getByText(/Reset All Data/i)
         fireEvent.click(resetButton)
 
         expect(screen.getByTestId('reset-modal')).toBeInTheDocument()

@@ -70,14 +70,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Light Mode Defaults -"Biomedical/Technical" feel */
+/* Light Mode - "Hypermodern Frost" */
 :root {
-  --background: #f8fafc;
-  /* Slate 50 */
+  /* Premium Slate/Blue-Grey Mesh */
+  --background: #f0f4f8;
   --foreground: #0f172a;
-  /* Slate 900 */
 
-  --card-bg: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.8);
   --card-fg: #0f172a;
 
   --popover-bg: #ffffff;
@@ -86,27 +85,31 @@
   --primary: #2563EB;
   --primary-fg: #ffffff;
 
-  --secondary: #f1f5f9;
-  /* Slate 100 */
+  --secondary: #e2e8f0;
   --secondary-fg: #1e293b;
 
   --muted: #f1f5f9;
   --muted-fg: #64748b;
 
-  --accent: #f1f5f9;
+  --accent: #f8fafc;
   --accent-fg: #0f172a;
 
   --destructive: #ef4444;
   --destructive-fg: #ffffff;
 
-  --border-color: #e2e8f0;
-  /* Slate 200 */
-  --input-border: #e2e8f0;
+  --border-color: #cbd5e1;
+  --input-border: #cbd5e1;
   --ring-color: #2563EB;
 
   --radius: 0.75rem;
 
-  /* PipVault Specific Mappings for Backwards Compatibility */
+  /* Glassmorphism Variables (Light) */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  --glass-blur: 16px;
+
+  /* PipVault Specific Mappings */
   --color-pip-card: var(--card-bg);
   --color-pip-border: var(--border-color);
   --color-pip-text: var(--foreground);
@@ -114,31 +117,25 @@
   --color-pip-active: var(--accent);
 }
 
-/* Dark Mode Overrides - "Deep Space" */
+/* Dark Mode - "Deep Space" */
 .dark {
   --background: #0b0e14;
-  /* Deep Void */
   --foreground: #e2e8f0;
-  /* Slate 200 */
 
   --card-bg: #151a23;
-  /* Dark Surface */
   --card-fg: #e2e8f0;
 
   --popover-bg: #151a23;
   --popover-fg: #e2e8f0;
 
   --primary: #3b82f6;
-  /* Blue 500 */
   --primary-fg: #ffffff;
 
   --secondary: #1e293b;
-  /* Slate 800 */
   --secondary-fg: #f8fafc;
 
   --muted: #1e293b;
   --muted-fg: #94a3b8;
-  /* Slate 400 */
 
   --accent: #1e293b;
   --accent-fg: #f8fafc;
@@ -147,9 +144,14 @@
   --destructive-fg: #f8fafc;
 
   --border-color: #272e3b;
-  /* Manual Dark Border */
   --input-border: #272e3b;
   --ring-color: #1d4ed8;
+
+  /* Glassmorphism Variables (Dark) */
+  --glass-bg: rgba(21, 26, 35, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  --glass-blur: 16px;
 }
 
 body {
@@ -157,13 +159,18 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
+  background-image: radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.05), transparent 40%);
+  background-attachment: fixed;
 }
 
 /* --- Utilities --- */
 .glass-panel {
-  background: rgba(21, 26, 35, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(39, 46, 59, 0.5);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .text-gradient {
