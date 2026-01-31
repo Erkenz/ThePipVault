@@ -9,12 +9,14 @@ import EmotionAnalysis from '@/components/dashboard/EmotionAnalysis';
 import CalendarHeatmap from '@/components/dashboard/TradingCalendar';
 import { Activity, BarChart2, DollarSign, PieChart, Loader2, Percent, TrendingUp, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
+import { useAccounts } from "@/context/AccountContext";
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function Home() {
   const { trades, loading } = useTrades();
   const { profile } = useProfile();
+  const { selectedAccount } = useAccounts();
 
   // === KPI LOGIC ===
   const stats = useMemo(() => {
@@ -167,7 +169,10 @@ export default function Home() {
             <h2 className="text-lg font-bold tracking-tight">Equity Curve</h2>
           </div>
           <div className="h-[450px] w-full">
-            <EquityChart trades={trades} />
+            <EquityChart
+              trades={trades}
+              startingBalance={selectedAccount ? selectedAccount.start_amount : profile.starting_equity}
+            />
           </div>
         </div>
 

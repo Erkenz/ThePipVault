@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { useAccounts } from './AccountContext';
 
 export interface Trade {
   id: string;
@@ -27,6 +28,7 @@ export interface Trade {
   commission?: number;
   swap?: number;
   gross_pnl?: number;
+  account_id?: string | null;
 }
 
 interface TradeContextType {
@@ -42,6 +44,7 @@ const TradeContext = createContext<TradeContextType | undefined>(undefined);
 export const TradeProvider = ({ children }: { children: ReactNode }) => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
+  const { selectedAccount } = useAccounts();
   const supabase = createClient();
 
   // De fetch functie is nu een useCallback zodat we deze kunnen aanroepen bij login events
@@ -58,11 +61,16 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('trades')
         .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .eq('user_id', user.id);
+
+      if (selectedAccount) {
+        query = query.eq('account_id', selectedAccount.id);
+      }
+
+      const { data, error } = await query.order('date', { ascending: false });
 
       if (error) throw error;
 
@@ -90,6 +98,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           exit_date: t.exit_date,
           commission: Number(t.commission || 0),
           swap: Number(t.swap || 0),
+          account_id: t.account_id,
           // We treat pnl_currency as GROSS PnL per user request
         }));
         setTrades(mappedTrades);
@@ -99,7 +108,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, selectedAccount]);
 
   // Luister naar Auth veranderingen om data te laden/wissen
   useEffect(() => {
@@ -145,7 +154,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         account_type: newTradeData.account_type,
         exit_date: newTradeData.exit_date,
         commission: newTradeData.commission,
-        swap: newTradeData.swap
+        swap: newTradeData.swap,
+        account_id: newTradeData.account_id || selectedAccount?.id // Use passed ID or fallback to selected
       };
 
       const { data, error } = await supabase
@@ -174,7 +184,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         account_type: savedTradeRaw.account_type,
         exit_date: savedTradeRaw.exit_date,
         commission: Number(savedTradeRaw.commission),
-        swap: Number(savedTradeRaw.swap)
+        swap: Number(savedTradeRaw.swap),
+        account_id: savedTradeRaw.account_id
       };
 
       setTrades((prev) => [savedTrade, ...prev]);
@@ -207,6 +218,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.exit_date) tradeToUpdate.exit_date = updatedData.exit_date;
       if (updatedData.commission !== undefined) tradeToUpdate.commission = updatedData.commission;
       if (updatedData.swap !== undefined) tradeToUpdate.swap = updatedData.swap;
+      if (updatedData.account_id !== undefined) tradeToUpdate.account_id = updatedData.account_id;
 
       const { data, error } = await supabase
         .from('trades')
@@ -236,7 +248,8 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         account_type: updatedTradeRaw.account_type,
         exit_date: updatedTradeRaw.exit_date,
         commission: Number(updatedTradeRaw.commission),
-        swap: Number(updatedTradeRaw.swap)
+        swap: Number(updatedTradeRaw.swap),
+        account_id: updatedTradeRaw.account_id
       } : t));
     } catch (err) {
       console.error("Fout bij updaten trade:", err);
