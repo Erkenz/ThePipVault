@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { LogIn, Loader2, TrendingUp, AlertCircle } from 'lucide-react';
+import { Loader2, TrendingUp, AlertCircle, Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -22,27 +24,14 @@ export default function LoginPage() {
   // Effect voor real-time validatie
   useEffect(() => {
     const newErrors: { email?: string, password?: string } = {};
-
-    // Email validatie
-    if (email && !/^\S+@\S+\.\S+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address.";
-    }
-
-    // Wachtwoord validatie
-    if (password && password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters.";
-    }
-
+    if (email && !/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Invalid email format.";
+    if (password && password.length < 6) newErrors.password = "Password too short.";
     setErrors(newErrors);
   }, [email, password]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Markeer alles als 'touched' bij submit poging
     setTouched({ email: true, password: true });
-
-    // Stop als er validatie fouten zijn
     if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
@@ -54,7 +43,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setServerError("Login failed. Please check your credentials.");
+      setServerError("Invalid credentials.");
       setLoading(false);
     } else {
       router.push('/');
@@ -63,84 +52,83 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-pip-dark">
-
-      {/* Linker Kant: Branding */}
-      <div className="hidden lg:flex flex-col justify-between p-12 bg-linear-to-br from-pip-dark via-pip-dark to-pip-gold/10 border-r border-pip-border">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-pip-gold rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-            <TrendingUp className="text-pip-dark" size={24} />
-          </div>
-          <span className="text-2xl font-black tracking-tighter text-white uppercase">The PipVault</span>
-        </div>
-
-        <div className="space-y-6">
-          <h2 className="text-5xl font-bold text-white leading-tight">
-            Secure your trades.<br />
-            <span className="text-pip-gold text-4xl">Optimize your edge.</span>
-          </h2>
-          <p className="text-pip-muted max-w-md text-lg">
-            The only place where data, emotion, and strategy come together to make you a consistent trader.
-          </p>
-        </div>
-
-        <p className="text-pip-muted/50 text-sm">
-          &copy; 2025 The PipVault. All rights reserved.
-        </p>
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-background transition-colors duration-500">
+      {/* Dynamic Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[100px] animate-pulse dark:bg-primary/20" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] dark:bg-indigo-500/10" />
       </div>
 
-      {/* Rechter Kant: Formulier */}
-      <div className="flex items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-pip-gold/5 rounded-full blur-[100px]" />
-
-        <div className="w-full max-w-100 space-y-8 relative z-10">
-          <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-white">Welcome Back</h3>
-            <p className="text-pip-muted">Enter your details to access your vault.</p>
+      <div className="w-full max-w-md relative z-10 p-6">
+        {/* Brand Header */}
+        <div className="flex flex-col items-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="w-14 h-14 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 mb-4 transform rotate-3 hover:rotate-6 transition-transform">
+            <TrendingUp className="text-white" size={28} />
           </div>
+          <h1 className="text-3xl font-black tracking-tighter text-foreground">
+            THE PIPVAULT
+          </h1>
+          <p className="text-muted-foreground font-medium text-sm mt-2">Access your trading command center</p>
+        </div>
 
+        {/* Glass Card */}
+        <div className="glass-panel rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-500">
           <form onSubmit={handleLogin} className="space-y-5">
+
             {/* Email Input */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
-                className={`w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 ${touched.email && errors.email ? '!border-pip-red' : ''}`}
-                placeholder="trader@piplab.com"
-              />
+            <div className="space-y-1.5 group">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
+                  className={cn(
+                    "w-full bg-secondary/50 border border-border/50 rounded-2xl pl-12 pr-4 py-3.5 text-foreground outline-none focus:border-primary/50 focus:bg-background transition-all placeholder:text-muted-foreground/50",
+                    touched.email && errors.email ? 'border-destructive/50 focus:border-destructive' : ''
+                  )}
+                  placeholder="trader@example.com"
+                />
+              </div>
               {touched.email && errors.email && (
-                <p className="text-pip-red text-xs flex items-center gap-1 animate-in slide-in-from-top-1">
-                  <AlertCircle size={12} /> {errors.email}
-                </p>
+                <p className="text-destructive text-xs pl-1 font-medium">{errors.email}</p>
               )}
             </div>
 
             {/* Password Input */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold text-pip-muted uppercase tracking-wider mb-1 block">Password</label>
+            <div className="space-y-1.5 group">
+              <div className="flex justify-between items-center pl-1">
+                <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Password</label>
+                <Link href="#" className="text-[11px] text-primary hover:text-primary/80 transition-colors">Forgot?</Link>
               </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
-                className={`w-full bg-pip-dark border border-pip-border rounded-xl px-4 py-3 text-white outline-none focus:border-pip-gold transition-colors placeholder:text-pip-muted/30 ${touched.password && errors.password ? '!border-pip-red' : ''}`}
-                placeholder="••••••••"
-              />
-              {touched.password && errors.password && (
-                <p className="text-pip-red text-xs flex items-center gap-1 animate-in slide-in-from-top-1">
-                  <AlertCircle size={12} /> {errors.password}
-                </p>
-              )}
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
+                  className={cn(
+                    "w-full bg-secondary/50 border border-border/50 rounded-2xl pl-12 pr-12 py-3.5 text-foreground outline-none focus:border-primary/50 focus:bg-background transition-all placeholder:text-muted-foreground/50",
+                    touched.password && errors.password ? 'border-destructive/50 focus:border-destructive' : ''
+                  )}
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {/* Server Error Message */}
             {serverError && (
-              <div className="p-4 bg-pip-red/10 border border-pip-red/20 rounded-xl text-pip-red text-sm flex items-center gap-2 animate-in fade-in zoom-in-95">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm flex items-center gap-2 animate-in fade-in zoom-in-95">
                 <AlertCircle size={16} />
                 {serverError}
               </div>
@@ -148,24 +136,26 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading || (touched.email && !!errors.email) || (touched.password && !!errors.password)}
-              className="bg-pip-gold hover:bg-pip-gold-dim text-pip-dark font-black px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-pip-gold/10 w-full"
+              disabled={loading}
+              className="group w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
+              {loading ? <Loader2 className="animate-spin" size={20} /> : (
                 <>
-                  <span>LOGIN</span>
-                  <LogIn size={20} />
+                  <span className="tracking-wide">AUTHENTICATE</span>
+                  <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
                 </>
               )}
             </button>
           </form>
-
-          <p className="text-center text-pip-muted text-sm">
-            Don't have an account yet? <Link href="/register" className="text-pip-gold font-bold hover:underline">Register Here</Link>
-          </p>
         </div>
+
+        {/* Footer */}
+        <p className="text-center mt-8 text-sm text-muted-foreground">
+          Not a member?{' '}
+          <Link href="/register" className="text-primary hover:text-primary/80 font-semibold hover:underline decoration-primary/30 underline-offset-4 transition-all">
+            Initiate Access
+          </Link>
+        </p>
       </div>
     </div>
   );

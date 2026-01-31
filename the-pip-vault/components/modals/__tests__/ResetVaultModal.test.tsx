@@ -2,6 +2,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ResetVaultModal from '../ResetVaultModal'
 
+
+// Mock Swal
+vi.mock('sweetalert2', () => ({
+    default: {
+        fire: vi.fn().mockResolvedValue({ isConfirmed: true })
+    }
+}))
+
+vi.mock('sweetalert2-react-content', () => ({
+    default: (fn: any) => fn
+}))
+
+import Swal from 'sweetalert2'
+
 describe('ResetVaultModal', () => {
     const onResetTrades = vi.fn()
     const onResetSettings = vi.fn()

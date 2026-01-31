@@ -14,7 +14,6 @@ vi.mock('@/context/ProfileContext', () => ({
 
 describe('SetupBreakdown', () => {
     beforeEach(() => {
-        mockUseSettings.mockReturnValue({ viewMode: 'pips' })
         mockUseProfile.mockReturnValue({ profile: { starting_equity: 10000 } })
     })
 
@@ -33,6 +32,6 @@ describe('SetupBreakdown', () => {
         render(<SetupBreakdown trades={mockTrades} />)
         expect(screen.getByText('Breakout')).toBeInTheDocument()
         expect(screen.getByText(/1 trades/)).toBeInTheDocument()
-        expect(screen.getByText('+20.00 pips')).toBeInTheDocument()
+        expect(screen.getByText('+$40.00')).toBeInTheDocument()
     })
 })

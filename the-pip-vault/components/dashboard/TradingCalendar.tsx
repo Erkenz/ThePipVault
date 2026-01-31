@@ -2,131 +2,89 @@
 
 import { useState, useMemo } from 'react';
 import { Trade } from "@/context/TradeContext";
-import { useSettings } from "@/context/SettingsContext";
 import { useProfile } from "@/context/ProfileContext";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Activity } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 interface TradingCalendarProps {
   trades: Trade[];
 }
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const TradingCalendar = ({ trades }: TradingCalendarProps) => {
-  const { viewMode } = useSettings();
   const { profile } = useProfile();
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Helper: Navigatie
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   const resetToToday = () => setCurrentDate(new Date());
 
-  // 1. Berekeningen voor de Grid
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-  // Correctie: Maandag (1) moet index 0 zijn, Zondag (0) index 6
-  const startingSlot = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+  // Grid start correction (Mon=0 in refined logic, or standard US Sun=0. Let's stick to standard US Sun=0 for now to match Date.getDay)
+  const startingSlot = firstDayOfMonth;
 
-  // 2. Data Aggregatie per Dag
   const dailyStats = useMemo(() => {
-    const stats: Record<number, { pnl: number; count: number; trades: Trade[] }> = {};
-
+    const stats: Record<number, { pnl: number; count: number }> = {};
     trades.forEach(trade => {
       const tDate = new Date(trade.date);
-      // Check of trade in DEZE maand en DIT jaar valt
-      if (
-        tDate.getMonth() === currentDate.getMonth() &&
-        tDate.getFullYear() === currentDate.getFullYear()
-      ) {
+      if (tDate.getMonth() === currentDate.getMonth() && tDate.getFullYear() === currentDate.getFullYear()) {
         const day = tDate.getDate();
-        if (!stats[day]) stats[day] = { pnl: 0, count: 0, trades: [] };
+        if (!stats[day]) stats[day] = { pnl: 0, count: 0 };
 
-        let tradeValue = 0;
-        if (viewMode === 'currency') tradeValue = trade.pnl_currency || 0;
-        else if (viewMode === 'percentage') tradeValue = ((trade.pnl_currency || 0) / (profile.starting_equity || 1)) * 100;
-        else tradeValue = trade.pnl;
+        const val = trade.pnl_currency || 0;
 
-        stats[day].pnl += tradeValue;
+        stats[day].pnl += val;
         stats[day].count += 1;
-        stats[day].trades.push(trade);
       }
     });
-
     return stats;
-  }, [trades, currentDate, viewMode]);
+  }, [trades, currentDate]);
 
-  // 3. Grid Genereren
-  const renderCalendarDays = () => {
+  const renderDays = () => {
     const slots = [];
-
-    // A. Lege slots voor de eerste dag
     for (let i = 0; i < startingSlot; i++) {
-      slots.push(<div key={`empty-${i}`} className="bg-pip-dark/30 border border-pip-border/30 h-24 sm:h-32 rounded-md opacity-50"></div>);
+      slots.push(<div key={`empty-${i}`} className="aspect-square bg-transparent" />);
     }
-
-    // B. De dagen van de maand
     for (let day = 1; day <= daysInMonth; day++) {
-      const data = dailyStats[day];
-      const isToday =
-        day === new Date().getDate() &&
-        currentDate.getMonth() === new Date().getMonth() &&
-        currentDate.getFullYear() === new Date().getFullYear();
+      const stat = dailyStats[day];
+      const isToday = day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
 
-      let bgClass = "bg-pip-card";
-      let textClass = "text-pip-muted";
-      let borderClass = "border-pip-border";
+      let bg = "bg-muted/10";
+      let text = "text-muted-foreground";
 
-      if (data) {
-        if (data.pnl > 0) {
-          bgClass = "bg-pip-green/10";
-          textClass = "text-pip-green";
-          borderClass = "border-pip-green/50";
-        } else if (data.pnl < 0) {
-          bgClass = "bg-pip-red/10";
-          textClass = "text-pip-red";
-          borderClass = "border-pip-red/50";
+      if (stat) {
+        if (stat.pnl > 0) {
+          bg = "bg-emerald-500/20 border-emerald-500/30";
+          text = "text-emerald-500";
+        } else if (stat.pnl < 0) {
+          bg = "bg-red-500/20 border-red-500/30";
+          text = "text-red-500";
         } else {
-          // Breakeven
-          textClass = "text-white";
+          bg = "bg-muted/40";
+          text = "text-foreground";
         }
       }
 
       slots.push(
-        <div
-          key={day}
-          className={`relative p-2 h-24 sm:h-32 border rounded-md transition-all hover:brightness-110 flex flex-col justify-between group
-            ${bgClass} ${borderClass} ${isToday ? 'ring-2 ring-pip-gold' : ''}
-          `}
-        >
-          {/* Dag Nummer */}
-          <div className="flex justify-between items-start">
-            <span className={`text-sm font-mono ${isToday ? 'text-pip-gold font-bold' : 'text-pip-muted'}`}>
-              {day}
+        <div key={day} className={cn(
+          "aspect-square rounded-lg border flex flex-col items-center justify-center relative group transition-all hover:scale-105 hover:shadow-lg cursor-default",
+          bg,
+          stat ? "border-solid" : "border-dashed border-border/30",
+          isToday ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
+        )}>
+          <span className={cn("text-xs font-bold", text)}>{day}</span>
+          {stat && (
+            <span className={cn("text-[9px] font-bold mt-1", text)}>
+              {stat.pnl > 0 ? '+' : ''}{stat.pnl.toFixed(0)}
             </span>
-            {data && (
-              <span className="text-[10px] bg-pip-dark/50 px-1.5 py-0.5 rounded text-pip-muted border border-pip-border/50">
-                {data.count}x
-              </span>
-            )}
-          </div>
+          )}
 
-          {/* PnL Resultaat */}
-          {data ? (
-            <div className="text-center">
-              <p className={`text-lg sm:text-xl font-bold tracking-tight ${textClass}`}>
-                {data.pnl > 0 ? '+' : ''}{viewMode === 'currency' ? '$' : ''}{data.pnl.toFixed(viewMode === 'pips' ? 0 : 2)}{viewMode === 'percentage' ? '%' : ''}
-              </p>
-              <p className="text-[10px] text-pip-muted uppercase hidden sm:block">{viewMode === 'currency' ? 'Profit' : (viewMode === 'percentage' ? 'Return' : 'Pips')}</p>
-            </div>
-          ) : (
-            // Lege dag placeholder (optioneel icoontje bij hover)
-            <div className="hidden group-hover:flex items-center justify-center h-full opacity-20">
-              <div className="w-8 h-1 bg-pip-border rounded-full"></div>
+          {/* Tooltip */}
+          {stat && (
+            <div className="absolute bottom-full mb-2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-xl border border-border opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+              {stat.count} trades • ${stat.pnl.toFixed(2)}
             </div>
           )}
         </div>
@@ -136,41 +94,26 @@ const TradingCalendar = ({ trades }: TradingCalendarProps) => {
   };
 
   return (
-    <div className="bg-pip-card border border-pip-border rounded-xl overflow-hidden shadow-sm">
-      {/* Header: Maand Navigatie */}
-      <div className="flex items-center justify-between p-6 border-b border-pip-border bg-pip-card/50">
-        <h3 className="text-xl font-bold text-white flex items-center gap-3">
-          <CalendarIcon className="text-pip-gold" size={24} />
-          {MONTHS[currentDate.getMonth()]} <span className="text-pip-muted">{currentDate.getFullYear()}</span>
+    <div className="glass-panel rounded-2xl p-6 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          <Activity size={20} className="text-primary" />
+          Performance Map
         </h3>
-
-        <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="p-2 hover:bg-pip-dark rounded-lg text-pip-muted hover:text-white transition-colors">
-            <ChevronLeft size={20} />
-          </button>
-          <button onClick={resetToToday} className="text-xs font-bold px-3 py-1.5 bg-pip-dark border border-pip-border rounded hover:border-pip-gold transition-colors text-pip-muted hover:text-white">
-            Today
-          </button>
-          <button onClick={nextMonth} className="p-2 hover:bg-pip-dark rounded-lg text-pip-muted hover:text-white transition-colors">
-            <ChevronRight size={20} />
-          </button>
+        <div className="flex items-center gap-2 bg-background/50 rounded-lg p-1 border border-border/50">
+          <button onClick={prevMonth} className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-primary"><ChevronLeft size={16} /></button>
+          <span className="text-xs font-bold w-20 text-center">{MONTHS[currentDate.getMonth()]}</span>
+          <button onClick={nextMonth} className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-primary"><ChevronRight size={16} /></button>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6">
-        {/* Dagen Header (Mon - Sun) */}
-        <div className="grid grid-cols-7 gap-2 sm:gap-4 mb-2 text-center">
-          {DAYS.map(day => (
-            <div key={day} className="text-xs font-bold text-pip-muted uppercase tracking-wider py-2">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-2 sm:gap-4">
-          {renderCalendarDays()}
-        </div>
+      <div className="grid grid-cols-7 gap-3 mb-2">
+        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+          <div key={d} className="text-center text-[10px] uppercase font-bold text-muted-foreground/50">{d}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-3 flex-1">
+        {renderDays()}
       </div>
     </div>
   );

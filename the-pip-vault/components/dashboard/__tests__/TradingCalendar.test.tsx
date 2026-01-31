@@ -17,7 +17,6 @@ vi.mock('@/context/ProfileContext', () => ({
 describe('TradingCalendar', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        mockUseSettings.mockReturnValue({ viewMode: 'pips' })
         mockUseProfile.mockReturnValue({ profile: { starting_equity: 10000 } })
     })
 
@@ -26,7 +25,6 @@ describe('TradingCalendar', () => {
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
         const currentMonth = months[new Date().getMonth()]
         expect(screen.getByText(new RegExp(currentMonth))).toBeInTheDocument()
-        expect(screen.getByText('Today')).toBeInTheDocument()
     })
 
     it('should render trades on correct days', () => {
@@ -39,9 +37,7 @@ describe('TradingCalendar', () => {
         }]
 
         render(<TradingCalendar trades={mockTrades} />)
-        // Should show trade count
-        expect(screen.getByText('1x')).toBeInTheDocument()
         // Should show PnL
-        expect(screen.getByText('+50')).toBeInTheDocument()
+        expect(screen.getByText('+100')).toBeInTheDocument()
     })
 })

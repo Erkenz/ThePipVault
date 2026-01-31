@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import TradeList from '../TradeList'
+
+// ... (mocks remain same)
+
+
 
 // Define mocks
 const mockUseTrades = vi.fn()
@@ -8,6 +12,18 @@ const mockUseSettings = vi.fn()
 const mockUseProfile = vi.fn()
 
 // Mock modules
+vi.mock('sweetalert2', () => ({
+    default: {
+        fire: vi.fn().mockResolvedValue({ isConfirmed: true })
+    }
+}))
+
+vi.mock('sweetalert2-react-content', () => ({
+    default: (fn: any) => fn
+}))
+
+import Swal from 'sweetalert2'
+
 vi.mock('@/context/TradeContext', () => ({
     useTrades: () => mockUseTrades(),
     Trade: {}
@@ -33,11 +49,7 @@ describe('TradeList', () => {
             addTrade: vi.fn()
         })
 
-        mockUseSettings.mockReturnValue({
-            viewMode: 'pips',
-            toggleViewMode: vi.fn(),
-            setViewMode: vi.fn()
-        })
+
 
         mockUseProfile.mockReturnValue({
             profile: { starting_equity: 10000 },
@@ -63,8 +75,7 @@ describe('TradeList', () => {
 
     it('should show empty state when no trades', () => {
         render(<TradeList />)
-        expect(screen.getByText(/Journal Empty/i)).toBeInTheDocument()
-        expect(screen.getByText(/No trades logged yet/i)).toBeInTheDocument()
+        expect(screen.getByText(/No Trades Found/i)).toBeInTheDocument()
     })
 
     it('should render trades correctly', () => {
@@ -89,10 +100,16 @@ describe('TradeList', () => {
 
         render(<TradeList />)
         expect(screen.getByText('EURUSD')).toBeInTheDocument()
-        expect(screen.getByText('+50')).toBeInTheDocument() // Default Pips view
+        expect(screen.getByText('+$500.00')).toBeInTheDocument() // Currency view always
+
+        // Verify new layout labels
+        expect(screen.getByText('ENTRY')).toBeInTheDocument()
+        expect(screen.getByText('SL')).toBeInTheDocument()
+        expect(screen.getByText('TP')).toBeInTheDocument()
+        expect(screen.getByText('EXIT')).toBeInTheDocument()
     })
 
-    it('should respect viewMode="currency"', () => {
+    it('should respect viewMode="currency" (now default)', () => {
         const mockTrades: any[] = [{
             id: '1',
             pair: 'EURUSD',
@@ -109,23 +126,18 @@ describe('TradeList', () => {
             addTrade: vi.fn()
         })
 
-        mockUseSettings.mockReturnValue({
-            viewMode: 'currency',
-            setViewMode: vi.fn(),
-            toggleViewMode: vi.fn()
-        })
-
         render(<TradeList />)
         expect(screen.getByText('+$500.00')).toBeInTheDocument()
     })
 
-    it('should call deleteTrade when delete button is clicked', () => {
+    it('should call deleteTrade when delete button is clicked and confirmed', async () => {
         const mockTrades: any[] = [{
             id: '1',
             pair: 'EURUSD',
             direction: 'LONG',
             date: new Date().toISOString(),
-            pnl: 0
+            pnl: 0,
+            pnl_currency: 0
         }]
 
         mockUseTrades.mockReturnValue({
@@ -137,15 +149,13 @@ describe('TradeList', () => {
 
         render(<TradeList />)
 
-        // Find button clearly
-        const deleteButtons = screen.getAllByRole('button')
-        // Assuming the delete button is one of them. 
-        // In the simplified mock environment we need to be sure. 
-        // Usually TradeList has few buttons per row.
-        // Let's assume the first button is delete for this trade.
-        const deleteBtn = deleteButtons[0]
-
+        const deleteBtn = screen.getByRole('button', { name: /delete trade/i })
         fireEvent.click(deleteBtn)
-        expect(deleteTradeMock).toHaveBeenCalledWith('1')
+
+        expect(Swal.fire).toHaveBeenCalled()
+
+        await waitFor(() => {
+            expect(deleteTradeMock).toHaveBeenCalledWith('1')
+        })
     })
 })

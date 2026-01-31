@@ -10,9 +10,10 @@ export interface Trade {
   pair: string;
   direction: 'LONG' | 'SHORT';
   entryPrice: number;
+  exitPrice?: number;
   stopLoss: number;
   takeProfit?: number;
-  pnl: number;
+  pnl?: number;
   pnl_currency?: number;
   setup?: string;
   emotion?: string;
@@ -21,6 +22,11 @@ export interface Trade {
   rrRatio?: number;
   comment?: string;
   asset_type?: 'forex' | 'futures';
+  account_type?: string;
+  exit_date?: string;
+  commission?: number;
+  swap?: number;
+  gross_pnl?: number;
 }
 
 interface TradeContextType {
@@ -68,6 +74,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           pair: t.pair,
           direction: t.direction,
           entryPrice: Number(t.entry_price),
+          exitPrice: t.exit_price ? Number(t.exit_price) : undefined,
           stopLoss: Number(t.stop_loss),
           takeProfit: t.take_profit ? Number(t.take_profit) : undefined,
           pnl: Number(t.pnl),
@@ -78,7 +85,12 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
           chartUrl: t.chart_url,
           rrRatio: t.rr_ratio ? Number(t.rr_ratio) : undefined,
           comment: t.trade_comment,
-          asset_type: t.asset_type || 'forex'
+          asset_type: t.asset_type || 'forex',
+          account_type: t.account_type || 'Standard',
+          exit_date: t.exit_date,
+          commission: Number(t.commission || 0),
+          swap: Number(t.swap || 0),
+          // We treat pnl_currency as GROSS PnL per user request
         }));
         setTrades(mappedTrades);
       }
@@ -120,6 +132,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         pair: newTradeData.pair,
         direction: newTradeData.direction,
         entry_price: newTradeData.entryPrice,
+        exit_price: newTradeData.exitPrice,
         stop_loss: newTradeData.stopLoss,
         take_profit: newTradeData.takeProfit,
         pnl: newTradeData.pnl,
@@ -128,7 +141,11 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         chart_url: newTradeData.chartUrl,
         rr_ratio: newTradeData.rrRatio,
         pnl_currency: newTradeData.pnl_currency,
-        trade_comment: newTradeData.comment // Insert comment
+        trade_comment: newTradeData.comment, // Insert comment
+        account_type: newTradeData.account_type,
+        exit_date: newTradeData.exit_date,
+        commission: newTradeData.commission,
+        swap: newTradeData.swap
       };
 
       const { data, error } = await supabase
@@ -147,12 +164,17 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       const savedTrade: Trade = {
         ...savedTradeRaw,
         entryPrice: Number(savedTradeRaw.entry_price),
+        exitPrice: savedTradeRaw.exit_price ? Number(savedTradeRaw.exit_price) : undefined,
         stopLoss: Number(savedTradeRaw.stop_loss),
         takeProfit: Number(savedTradeRaw.take_profit),
         chartUrl: savedTradeRaw.chart_url,
         rrRatio: Number(savedTradeRaw.rr_ratio),
         pnl_currency: Number(savedTradeRaw.pnl_currency),
-        comment: savedTradeRaw.trade_comment
+        comment: savedTradeRaw.trade_comment,
+        account_type: savedTradeRaw.account_type,
+        exit_date: savedTradeRaw.exit_date,
+        commission: Number(savedTradeRaw.commission),
+        swap: Number(savedTradeRaw.swap)
       };
 
       setTrades((prev) => [savedTrade, ...prev]);
@@ -168,6 +190,7 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.pair) tradeToUpdate.pair = updatedData.pair;
       if (updatedData.direction) tradeToUpdate.direction = updatedData.direction;
       if (updatedData.entryPrice) tradeToUpdate.entry_price = updatedData.entryPrice;
+      if (updatedData.exitPrice !== undefined) tradeToUpdate.exit_price = updatedData.exitPrice;
       if (updatedData.stopLoss) tradeToUpdate.stop_loss = updatedData.stopLoss;
       if (updatedData.takeProfit !== undefined) tradeToUpdate.take_profit = updatedData.takeProfit;
       if (updatedData.pnl) tradeToUpdate.pnl = updatedData.pnl;
@@ -180,6 +203,10 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.comment !== undefined) tradeToUpdate.trade_comment = updatedData.comment;
       if (updatedData.date) tradeToUpdate.date = updatedData.date;
       if (updatedData.asset_type) tradeToUpdate.asset_type = updatedData.asset_type;
+      if (updatedData.account_type) tradeToUpdate.account_type = updatedData.account_type;
+      if (updatedData.exit_date) tradeToUpdate.exit_date = updatedData.exit_date;
+      if (updatedData.commission !== undefined) tradeToUpdate.commission = updatedData.commission;
+      if (updatedData.swap !== undefined) tradeToUpdate.swap = updatedData.swap;
 
       const { data, error } = await supabase
         .from('trades')
@@ -200,11 +227,16 @@ export const TradeProvider = ({ children }: { children: ReactNode }) => {
         // Better to use the returned data to be sure
         pair: updatedTradeRaw.pair,
         entryPrice: Number(updatedTradeRaw.entry_price),
+        exitPrice: updatedTradeRaw.exit_price ? Number(updatedTradeRaw.exit_price) : undefined,
         stopLoss: Number(updatedTradeRaw.stop_loss),
         pnl: Number(updatedTradeRaw.pnl),
         // ... map others properly potentially, or just optimistically update from updatedData + id/user_id preservation
         comment: updatedTradeRaw.trade_comment,
-        asset_type: updatedTradeRaw.asset_type
+        asset_type: updatedTradeRaw.asset_type,
+        account_type: updatedTradeRaw.account_type,
+        exit_date: updatedTradeRaw.exit_date,
+        commission: Number(updatedTradeRaw.commission),
+        swap: Number(updatedTradeRaw.swap)
       } : t));
     } catch (err) {
       console.error("Fout bij updaten trade:", err);

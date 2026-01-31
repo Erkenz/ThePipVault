@@ -6,8 +6,8 @@ type ViewMode = 'pips' | 'currency' | 'percentage';
 
 interface SettingsContextType {
   viewMode: ViewMode;
-  toggleViewMode: () => void;
   setViewMode: (mode: ViewMode) => void;
+  toggleViewMode: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -16,26 +16,34 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [viewMode, setViewModeState] = useState<ViewMode>('pips');
 
   useEffect(() => {
-    // Load preference from local storage
-    const savedMode = localStorage.getItem('pip-vault-view-mode') as ViewMode;
-    if (savedMode && (savedMode === 'pips' || savedMode === 'currency' || savedMode === 'percentage')) {
-      setViewModeState(savedMode);
+    // Client-side only logic
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pip-vault-view-mode') as ViewMode;
+      if (saved && ['pips', 'currency', 'percentage'].includes(saved)) {
+        setViewModeState(saved);
+      }
     }
   }, []);
 
   const setViewMode = (mode: ViewMode) => {
     setViewModeState(mode);
-    localStorage.setItem('pip-vault-view-mode', mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pip-vault-view-mode', mode);
+    }
   };
 
   const toggleViewMode = () => {
-    if (viewMode === 'pips') setViewMode('currency');
-    else if (viewMode === 'currency') setViewMode('percentage');
-    else setViewMode('pips');
+    setViewModeState(prev => {
+      const next = prev === 'pips' ? 'currency' : prev === 'currency' ? 'percentage' : 'pips';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pip-vault-view-mode', next);
+      }
+      return next;
+    });
   };
 
   return (
-    <SettingsContext.Provider value={{ viewMode, toggleViewMode, setViewMode }}>
+    <SettingsContext.Provider value={{ viewMode, setViewMode, toggleViewMode }}>
       {children}
     </SettingsContext.Provider>
   );

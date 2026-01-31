@@ -12,75 +12,39 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { TrendingUp, Activity, Calendar } from "lucide-react";
-import { useSettings } from "@/context/SettingsContext";
 import { useProfile } from "@/context/ProfileContext";
+import { cn } from "@/lib/utils";
 
 interface EquityChartProps {
   trades: Trade[];
 }
 
-// FIX: Lokale interface om TS error te voorkomen
 interface CustomTooltipProps {
   active?: boolean;
   payload?: any[];
   label?: string;
 }
 
-// Custom Tooltip Component met de nieuwe props
-// Custom Tooltip Component met de nieuwe props
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-  const { viewMode } = useSettings();
 
   if (active && payload && payload.length) {
-    const data = payload[0].payload; // Dit is het data-object uit je array
+    const data = payload[0].payload;
     return (
-      <div className="bg-pip-card border border-pip-border p-3 rounded-lg shadow-xl backdrop-blur-md z-50">
-        <p className="text-pip-muted text-xs mb-1 flex items-center gap-1">
+      <div className="glass-panel p-3 rounded-xl shadow-2xl z-50 min-w-[200px]">
+        <p className="text-muted-foreground text-xs mb-2 flex items-center gap-1.5 font-medium border-b border-border/50 pb-2">
           <Calendar size={12} /> {label}
         </p>
-        <p className="text-white font-bold text-lg">
-          Equity: {data.equity > 0 ? '+' : ''}{data.equity.toFixed(2)}
-        </p>
-        <p className="text-pip-muted uppercase tracking-wider text-[10px] mb-1">Daily Trades</p>
-        <div className="space-y-1 max-h-32 overflow-y-auto">
-          {data.trades.map((t: Trade, i: number) => {
-            let tradeVal = t.pnl;
-            const startEquity = 10000; // Fallback only used purely for tooltip individual % (not optimal but okay for now)
+        <div className="mb-3">
+          <p className="text-[10px] uppercase font-bold text-muted-foreground">Equity</p>
+          <p className="text-foreground font-black text-xl tracking-tight">
+            ${data.equity.toFixed(2)}
+          </p>
+        </div>
 
-            if (viewMode === 'currency') {
-              tradeVal = t.pnl_currency || 0;
-            } else if (viewMode === 'percentage') {
-              // Dit is lastig in tooltip, we tonen hier de individuele trade impact?
-              // Laten we consistent zijn: tonen de individuele trade % relative to start equity.
-              // Maar startEquity zit niet in tooltip props direct. 
-              // We kunnen wel gewoon viewMode checken en labels aanpassen.
-              // We gebruiken hierboven profile context niet in deze sub-component.
-              // Voor simpelheid: laat % zien als we weten wat start capital is, anders 0.
-              // Maar we kunnen de waarde van parent chart data meegeven? Nee.
-              // Betere fix: toon gewoon de waarde die in de chart aggregatie zit? Nee dat is de som.
-              // We laten hier gewoon de valuta/pips zien OF we moeten refactoren.
-              // Voor nu: percentage view switched naar currency in de list view OF we berekenen het.
-              // Laten we ervan uitgaan dat dit component toegang heeft tot profile via context (wat het heeft)
-            }
-
-            // REFACTOR: We moeten profile accessen in CustomTooltip.
-            // Maar hooks mogen niet conditioneel. 
-            // We halen profile op in main component en geven het mee? Nee Tooltip wordt door Recharts gerenderd.
-            // We kunnen useProfile() hier gebruiken als het een component is.
-            // Ja, CustomTooltip IS een component.
-
-            // Dus we doen:
-            // const { profile } = useProfile();
-            // tradeVal = ((t.pnl_currency || 0) / (profile.starting_equity || 1)) * 100;
-          })}
-          {/* We doen de logic in de render map hieronder in één keer goed */}
-          {data.trades.map((t: Trade, i: number) => {
-            // We need profile context inside map? No, hook usage rule.
-            // Logic moved inside Map is fine if data is available.
-            // But we need profile.starting_equity.
-            // See simplified implementation below.
-            return <TradeRow key={i} trade={t} viewMode={viewMode} />;
-          })}
+        <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+          {data.trades.map((t: Trade, i: number) => (
+            <TradeRow key={i} trade={t} />
+          ))}
         </div>
       </div>
     );
@@ -88,29 +52,21 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-const TradeRow = ({ trade, viewMode }: { trade: Trade, viewMode: string }) => {
-  const { profile } = useProfile();
-  let val = trade.pnl;
-  let suffix = '';
-  let prefix = '';
+const TradeRow = ({ trade }: { trade: Trade }) => {
+  const val = trade.pnl_currency || 0;
+  const prefix = '$';
 
-  if (viewMode === 'currency') {
-    val = trade.pnl_currency || 0;
-    prefix = '$';
-  } else if (viewMode === 'percentage') {
-    val = ((trade.pnl_currency || 0) / (profile.starting_equity || 1)) * 100;
-    suffix = '%';
-  }
+  const isWin = val > 0;
 
   return (
-    <div className="flex justify-between items-center text-[10px]">
-      <span className="flex items-center gap-1">
-        <span className={`w-1 h-1 rounded-full ${val > 0 ? 'bg-pip-green' : 'bg-pip-red'}`} />
-        <span className="text-white">{trade.pair}</span>
-        <span className="text-pip-muted opacity-50">{trade.direction}</span>
+    <div className="flex justify-between items-center text-xs group">
+      <span className="flex items-center gap-2">
+        <span className={cn("w-1.5 h-1.5 rounded-full", isWin ? 'bg-emerald-500' : 'bg-red-500')} />
+        <span className="text-foreground/80 font-semibold">{trade.pair}</span>
+        <span className="text-muted-foreground text-[10px] opacity-70">{trade.direction}</span>
       </span>
-      <span className={`font-mono ${val > 0 ? 'text-pip-green' : 'text-pip-red'}`}>
-        {val > 0 ? '+' : ''}{prefix}{val.toFixed(2)}{suffix}
+      <span className={cn("font-mono font-bold", isWin ? 'text-emerald-500' : 'text-red-500')}>
+        {isWin ? '+' : ''}{prefix}{val.toFixed(2)}
       </span>
     </div>
   );
@@ -118,19 +74,15 @@ const TradeRow = ({ trade, viewMode }: { trade: Trade, viewMode: string }) => {
 
 
 const EquityChart = ({ trades }: EquityChartProps) => {
-  const { viewMode } = useSettings();
   const { profile } = useProfile();
 
-  // Data Transformatie Logica
   const chartData = useMemo(() => {
     if (trades.length === 0) return [];
 
-    // 1. Sorteer op datum (Oud -> Nieuw)
     const sortedTrades = [...trades].sort((a, b) =>
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    // 2. Groepeer op Datum (Aggregatie)
     const dailyMap: Record<string, { date: string, pnl: number, trades: Trade[] }> = {};
 
     sortedTrades.forEach(trade => {
@@ -140,22 +92,14 @@ const EquityChart = ({ trades }: EquityChartProps) => {
         dailyMap[dateKey] = { date: dateKey, pnl: 0, trades: [] };
       }
 
-      let tradeValue = 0;
-      if (viewMode === 'currency') tradeValue = trade.pnl_currency || 0;
-      else if (viewMode === 'percentage') tradeValue = ((trade.pnl_currency || 0) / (profile.starting_equity || 1)) * 100;
-      else tradeValue = trade.pnl;
+      const tradeValue = trade.pnl_currency || 0;
 
       dailyMap[dateKey].pnl += tradeValue;
       dailyMap[dateKey].trades.push(trade);
     });
 
-    // 3. Bouw Chart Data Points (Running Total per dag)
-    // Percentage: Start op 0%
-    // Valuta: Start op Start Equity
-    // Pips: Start op 0
-    let runningBalance = viewMode === 'currency' ? (profile.starting_equity || 0) : 0;
+    let runningBalance = profile.starting_equity || 0;
 
-    // Startpunt
     const dataPoints = [{
       name: 'Start',
       date: 'Start',
@@ -164,30 +108,8 @@ const EquityChart = ({ trades }: EquityChartProps) => {
       trades: [] as Trade[]
     }];
 
-    // Converteer map naar array en bereken running balance
     Object.values(dailyMap).forEach(day => {
-      // Bereken dagwaarde
-      let dayValue = 0;
-
-      if (viewMode === 'percentage') {
-        // Voor percentage tellen we de % gain per trade op (arithmetic) 
-        // OF we berekenen de running PnL in valuta en delen door start equity?
-        // Growth Curve = (Total PnL / Start Equity) * 100.
-        // Dit is exacter.
-
-        // Maar we moeten 'day.pnl' hierboven al goed hebben?
-        // Hierboven in stap 2 berekenden we day.pnl op basis van viewMode.
-
-        // Als viewMode % is, is day.pnl de SOM van % returns van trades die dag?
-        // Of is day.pnl de som van valuta?
-        // In stap 2:
-        // if % -> tradeValue = ((pnl_curr) / start) * 100.
-        // Dus day.pnl is de som van % die dag.
-        // Running balance is som van alle % returns.
-        dayValue = day.pnl;
-      } else {
-        dayValue = day.pnl;
-      }
+      const dayValue = day.pnl;
 
       runningBalance += dayValue;
 
@@ -201,64 +123,52 @@ const EquityChart = ({ trades }: EquityChartProps) => {
     });
 
     return dataPoints;
-  }, [trades, viewMode, profile.starting_equity]);
+  }, [trades, profile.starting_equity]);
 
   const currentEquity = chartData.length > 0 ? chartData[chartData.length - 1].equity : 0;
+  const isPositiveWindow = currentEquity >= (profile.starting_equity || 0);
 
   return (
-    <div className="bg-pip-card border border-pip-border p-6 rounded-xl shadow-sm flex flex-col h-112.5">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <TrendingUp size={20} className="text-pip-gold" />
-          Equity Curve
-        </h3>
-        <span className={`text-sm font-mono px-3 py-1 rounded-md border ${viewMode === 'percentage'
-          ? (currentEquity >= 0 ? 'bg-pip-green/10 text-pip-green border-pip-green/30' : 'bg-pip-red/10 text-pip-red border-pip-red/30')
-          : (currentEquity >= (viewMode === 'currency' ? profile.starting_equity : 0) ? 'bg-pip-green/10 text-pip-green border-pip-green/30' : 'bg-pip-red/10 text-pip-red border-pip-red/30')
-          }`}>
-          Current: {viewMode === 'currency' ? '$' : ''}{currentEquity.toFixed(2)}{viewMode === 'percentage' ? '%' : ''}
-        </span>
-      </div>
-
+    <div className="w-full h-full flex flex-col">
       <div className="flex-1 w-full min-h-0">
         {chartData.length > 1 ? (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} opacity={0.3} />
               <XAxis
                 dataKey="date"
-                stroke="#666"
-                tick={{ fill: '#666', fontSize: 12 }}
+                stroke="var(--muted-fg)"
+                tick={{ fill: 'var(--muted-fg)', fontSize: 10 }}
                 tickLine={false} axisLine={false} minTickGap={30}
               />
               <YAxis
-                stroke="#666"
-                tick={{ fill: '#666', fontSize: 12 }}
+                stroke="var(--muted-fg)"
+                tick={{ fill: 'var(--muted-fg)', fontSize: 10 }}
                 tickLine={false} axisLine={false}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--muted-fg)', strokeWidth: 1, strokeDasharray: '4 4' }} />
               <Area
                 type="monotone"
                 dataKey="equity"
-                stroke="#D4AF37"
+                stroke="var(--primary)"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorEquity)"
-                activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }}
+                activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--background)", fill: "var(--primary)" }}
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-pip-muted/40 border border-dashed border-pip-border/50 rounded-lg">
+          <div className="h-full flex flex-col items-center justify-center text-muted-foreground/30 border-2 border-dashed border-border/30 rounded-xl">
             <Activity size={48} className="mb-4 opacity-50" />
-            <p className="font-medium">Not enough data yet</p>
-            <p className="text-xs mt-1">Add trades to see your curve.</p>
+            <p className="font-bold text-sm">No equity data</p>
+            <p className="text-xs mt-1">Start trading to generate your curve.</p>
           </div>
         )}
       </div>
