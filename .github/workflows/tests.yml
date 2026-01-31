@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+# Zorgt ervoor dat alle 'run' commando's in de submap worden uitgevoerd
+defaults:
+  run:
+    working-directory: the-pip-vault
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          # Vertel setup-node waar de lockfile staat voor de cache
+          cache-dependency-path: the-pip-vault/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Linting check
+        run: npm run lint
+
+      - name: Run Vitest tests
+        run: npm test
