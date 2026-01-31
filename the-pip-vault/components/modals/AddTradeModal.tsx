@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { X, Save, CheckCircle, Loader2, Calculator, AlertCircle, Clock, Calendar, Wallet, TrendingUp, TrendingDown, Hash, Users, Activity } from 'lucide-react';
 import { useTrades } from '@/context/TradeContext';
 import { useProfile } from '@/context/ProfileContext';
+import { useAccounts } from '@/context/AccountContext';
 import { Trade } from '@/context/TradeContext';
 import { cn } from '@/lib/utils';
 import CustomSelect from '@/components/ui/CustomSelect';
@@ -20,6 +21,7 @@ const EMOTIONS = ['Confident', 'Neutral', 'FOMO', 'Greedy', 'Hesitant', 'Revenge
 const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => {
   const { addTrade, updateTrade } = useTrades();
   const { profile } = useProfile();
+  const { accounts, selectedAccount } = useAccounts();
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,6 +46,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
     comment: '',
     assetType: 'forex' as 'forex' | 'futures',
     accountType: '',
+    accountId: '',
     date: '',
     exitDate: '',
   });
@@ -79,6 +82,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         comment: '',
         assetType: profile?.asset_class || 'forex',
         accountType: profile?.account_types?.[0] || 'Demo',
+        accountId: selectedAccount?.id || (accounts.length > 0 ? accounts[0].id : ''),
         date: localIso,
         exitDate: localIso,
       });
@@ -111,11 +115,12 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         comment: tradeToEdit.comment || '',
         assetType: tradeToEdit.asset_type || profile?.asset_class || 'forex',
         accountType: tradeToEdit.account_type || profile?.account_types?.[0] || 'Standard',
+        accountId: tradeToEdit.account_id || selectedAccount?.id || (accounts.length > 0 ? accounts[0].id : ''),
         date: toLocalIso(tradeToEdit.date),
         exitDate: toLocalIso(tradeToEdit.exit_date),
       });
     }
-  }, [isOpen, profile, tradeToEdit]);
+  }, [isOpen, profile, tradeToEdit, accounts, selectedAccount]);
 
   // Calculations
   useEffect(() => {
@@ -188,6 +193,7 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
         comment: formData.comment,
         asset_type: formData.assetType,
         account_type: formData.accountType,
+        account_id: formData.accountId,
         date: new Date(formData.date).toISOString(),
         exit_date: formData.exitDate ? new Date(formData.exitDate).toISOString() : undefined,
       };
@@ -296,9 +302,9 @@ const AddTradeModal = ({ isOpen, onClose, tradeToEdit }: AddTradeModalProps) => 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase">Account</label>
                     <CustomSelect
-                      value={formData.accountType}
-                      onChange={(val) => setFormData(prev => ({ ...prev, accountType: val }))}
-                      options={(profile.account_types && Array.isArray(profile.account_types) ? profile.account_types : []).map(t => ({ value: t, label: t }))}
+                      value={formData.accountId}
+                      onChange={(val) => setFormData(prev => ({ ...prev, accountId: val }))}
+                      options={accounts.map(a => ({ value: a.id, label: `${a.name} (${a.type})` }))}
                       placeholder="Select Account"
                     />
                   </div>

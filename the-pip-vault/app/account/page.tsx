@@ -21,19 +21,16 @@ export default async function AccountPage() {
 
     // 3. Render Client Component with initial data
     return (
-        <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto space-y-8">
+        <div className="max-w-5xl mx-auto space-y-8 pb-24 animate-in fade-in duration-500">
+            <header className="flex flex-col gap-2 border-b border-border/40 pb-6">
+                <h1 className="text-3xl font-black tracking-tighter uppercase italic flex items-center gap-3">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">Account Management</span>
+                </h1>
+                <p className="text-muted-foreground font-medium">Manage your profile details and trading accounts.</p>
+            </header>
 
-                {/* Header */}
-                <div className="border-b border-pip-border pb-6">
-                    <h1 className="text-3xl font-black text-pip-text uppercase tracking-tighter italic">Account Settings</h1>
-                    <p className="text-pip-muted">Manage your profile and account preferences.</p>
-                </div>
-
-                {/* Client Form */}
-                <AccountForm user={user} profile={profile} />
-
-            </div>
+            {/* Client Form */}
+            <AccountForm user={user} profile={profile} />
         </div>
     );
 }

@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 interface EquityChartProps {
   trades: Trade[];
+  startingBalance?: number;
 }
 
 interface CustomTooltipProps {
@@ -73,7 +74,7 @@ const TradeRow = ({ trade }: { trade: Trade }) => {
 };
 
 
-const EquityChart = ({ trades }: EquityChartProps) => {
+const EquityChart = ({ trades, startingBalance }: EquityChartProps) => {
   const { profile } = useProfile();
 
   const chartData = useMemo(() => {
@@ -98,7 +99,7 @@ const EquityChart = ({ trades }: EquityChartProps) => {
       dailyMap[dateKey].trades.push(trade);
     });
 
-    let runningBalance = profile.starting_equity || 0;
+    let runningBalance = startingBalance !== undefined ? startingBalance : (profile.starting_equity || 0);
 
     const dataPoints = [{
       name: 'Start',
@@ -123,10 +124,10 @@ const EquityChart = ({ trades }: EquityChartProps) => {
     });
 
     return dataPoints;
-  }, [trades, profile.starting_equity]);
+  }, [trades, profile.starting_equity, startingBalance]);
 
   const currentEquity = chartData.length > 0 ? chartData[chartData.length - 1].equity : 0;
-  const isPositiveWindow = currentEquity >= (profile.starting_equity || 0);
+  const isPositiveWindow = currentEquity >= (startingBalance !== undefined ? startingBalance : (profile.starting_equity || 0));
 
   return (
     <div className="w-full h-full flex flex-col">

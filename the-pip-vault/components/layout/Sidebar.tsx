@@ -11,9 +11,12 @@ import {
     LogOut,
     Plus,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Wallet,
+    Check
 } from 'lucide-react';
 import { useProfile } from '@/context/ProfileContext';
+import { useAccounts } from '@/context/AccountContext';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -24,8 +27,10 @@ import { useRouter } from 'next/navigation';
 export default function Sidebar() {
     const pathname = usePathname();
     const { profile } = useProfile();
+    const { accounts, selectedAccount, selectAccount } = useAccounts();
     const [collapsed, setCollapsed] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -73,6 +78,61 @@ export default function Sidebar() {
                     </button>
                 </div>
 
+                {/* Account Switcher */}
+                {!collapsed && (
+                    <div className="px-4 mb-2 relative">
+                        <button
+                            onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-border/50 bg-background/50 hover:bg-muted/50 transition-all text-sm group"
+                        >
+                            <div className="flex items-center gap-2 overflow-hidden">
+                                <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0", selectedAccount ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary")}>
+                                    {selectedAccount ? selectedAccount.name.charAt(0).toUpperCase() : "O"}
+                                </div>
+                                <div className="flex flex-col items-start truncate">
+                                    <span className="font-bold truncate w-full text-left">{selectedAccount ? selectedAccount.name : "Overall View"}</span>
+                                    <span className="text-[10px] text-muted-foreground font-medium uppercase">{selectedAccount ? selectedAccount.type : "All Accounts"}</span>
+                                </div>
+                            </div>
+                            <ChevronRight size={14} className={cn("text-muted-foreground transition-transform duration-200", isAccountDropdownOpen && "rotate-90")} />
+                        </button>
+
+                        {/* Dropdown */}
+                        {isAccountDropdownOpen && (
+                            <div className="absolute top-full left-4 right-4 mt-2 p-1 rounded-xl border border-border/50 bg-popover/95 backdrop-blur-xl shadow-2xl z-50 flex flex-col gap-1 animate-in zoom-in-95 duration-200">
+                                <button
+                                    onClick={() => { selectAccount(null); setIsAccountDropdownOpen(false); }}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
+                                        !selectedAccount ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                                    )}
+                                >
+                                    <span className="flex items-center gap-2"><LayoutDashboard size={12} /> Overall View</span>
+                                    {!selectedAccount && <Check size={12} />}
+                                </button>
+                                <div className="h-px bg-border/50 mx-2 my-1" />
+                                {accounts.map(acc => (
+                                    <button
+                                        key={acc.id}
+                                        onClick={() => { selectAccount(acc.id); setIsAccountDropdownOpen(false); }}
+                                        className={cn(
+                                            "w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
+                                            selectedAccount?.id === acc.id ? "bg-emerald-500/10 text-emerald-500" : "text-foreground hover:bg-muted"
+                                        )}
+                                    >
+                                        <span className="flex items-center gap-2 truncate">
+                                            <span className={cn("w-1.5 h-1.5 rounded-full", acc.status === 'Active' ? "bg-blue-500" : acc.status === 'Passed' ? "bg-emerald-500" : "bg-red-500")} />
+                                            {acc.name}
+                                        </span>
+                                        {selectedAccount?.id === acc.id && <Check size={12} />}
+                                    </button>
+                                ))}
+                                {accounts.length === 0 && <div className="px-3 py-2 text-[10px] text-muted-foreground text-center italic">No accounts found</div>}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Navigation */}
                 <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                     <SidebarLink
@@ -108,6 +168,14 @@ export default function Sidebar() {
                     )}
 
                     <div className="my-4 h-px bg-border/50 mx-2" />
+
+                    <SidebarLink
+                        href="/account"
+                        icon={<Wallet size={20} />}
+                        label="My Account"
+                        active={pathname === '/account'}
+                        collapsed={collapsed}
+                    />
 
                     <SidebarLink
                         href="/settings"

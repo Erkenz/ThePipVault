@@ -26,7 +26,7 @@ const TradeList = () => {
   // Filters State
   const [filters, setFilters] = useState({
     outcome: 'ALL', // ALL, WIN, LOSS, BE
-    accountType: 'ALL',
+
     session: 'ALL',
     pair: '',
     startDate: '',
@@ -53,14 +53,7 @@ const TradeList = () => {
       if (filters.outcome === 'BE' && pnl !== 0) return false;
     }
 
-    // 2. Account Type
-    if (filters.accountType !== 'ALL') {
-      if (filters.accountType === 'Unspecified') {
-        if (trade.account_type) return false;
-      } else {
-        if (trade.account_type !== filters.accountType) return false;
-      }
-    }
+
 
     // 3. Session
     if (filters.session !== 'ALL' && trade.session !== filters.session) return false;
@@ -89,10 +82,7 @@ const TradeList = () => {
 
   const sortedTrades = [...filteredTrades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // Unique Lists for Dropdowns
-  const uniqueAccounts = Array.from(new Set(trades.map(t => t.account_type).filter(Boolean)));
-  // Use profile for complete list or fallback to trade data
-  const accountOptions = profile.account_types && profile.account_types.length > 0 ? profile.account_types : uniqueAccounts;
+
 
   const uniqueSessions = Array.from(new Set(trades.map(t => t.session).filter(Boolean)));
   const sessionOptions = profile.sessions && profile.sessions.length > 0 ? profile.sessions : uniqueSessions;
@@ -145,17 +135,7 @@ const TradeList = () => {
           />
         </div>
 
-        {/* Account Filter */}
-        <div className="w-[140px]">
-          <CustomSelect
-            value={filters.accountType}
-            onChange={(val) => setFilters(prev => ({ ...prev, accountType: val }))}
-            options={[
-              { value: 'ALL', label: 'All Accounts' },
-              ...accountOptions.filter(Boolean).map(a => ({ value: a || '', label: a || '' }))
-            ]}
-          />
-        </div>
+
 
         {/* Session Filter */}
         <div className="w-[140px]">
@@ -178,9 +158,9 @@ const TradeList = () => {
         />
 
         {/* Reset */}
-        {(filters.outcome !== 'ALL' || filters.accountType !== 'ALL' || filters.session !== 'ALL' || filters.pair !== '' || filters.startDate !== '' || filters.endDate !== '') && (
+        {(filters.outcome !== 'ALL' || filters.session !== 'ALL' || filters.pair !== '' || filters.startDate !== '' || filters.endDate !== '') && (
           <button
-            onClick={() => setFilters({ outcome: 'ALL', accountType: 'ALL', session: 'ALL', pair: '', startDate: '', endDate: '' })}
+            onClick={() => setFilters({ outcome: 'ALL', session: 'ALL', pair: '', startDate: '', endDate: '' })}
             className="p-2 text-muted-foreground hover:text-destructive transition-colors ml-2"
             title="Reset Filters"
           >

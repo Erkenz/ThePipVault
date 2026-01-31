@@ -7,6 +7,8 @@ import { ProfileProvider } from "@/context/ProfileContext";
 import { SettingsProvider } from "@/context/SettingsContext";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
+import { AccountProvider } from "@/context/AccountContext";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -40,14 +42,16 @@ export default function RootLayout({
         >
           <ProfileProvider>
             <SettingsProvider>
-              <TradeProvider>
-                <div className="flex min-h-screen bg-background text-foreground">
-                  <Sidebar />
-                  <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-6 py-6 transition-all duration-300">
-                    {children}
-                  </main>
-                </div>
-              </TradeProvider>
+              <AccountProvider>
+                <TradeProvider>
+                  <div className="flex min-h-screen bg-background text-foreground">
+                    <Sidebar />
+                    <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-6 py-6 transition-all duration-300">
+                      {children}
+                    </main>
+                  </div>
+                </TradeProvider>
+              </AccountProvider>
             </SettingsProvider>
           </ProfileProvider>
         </ThemeProvider>
