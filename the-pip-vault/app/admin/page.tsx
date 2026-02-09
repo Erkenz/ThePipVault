@@ -20,8 +20,6 @@ interface DashboardStats {
 
 export default async function AdminDashboard() {
     const supabase = await createClient();
-    const adminAuthClient = createAdminClient();
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         redirect("/login");
@@ -45,7 +43,19 @@ export default async function AdminDashboard() {
         .from('trades')
         .select('*', { count: 'exact', head: true });
 
-    const { data: { users: authUsers }, error: authError } = await adminAuthClient.auth.admin.listUsers();
+    let authUsers = [];
+    try {
+        const adminAuthClient = createAdminClient();
+        const { data: { users }, error: authError } = await adminAuthClient.auth.admin.listUsers();
+        if (authError) {
+            console.error("Error fetching auth users:", authError);
+        } else {
+            authUsers = users || [];
+        }
+    } catch (error) {
+        console.error("Failed to initialize admin client or fetch users:", error);
+        // Fallback or empty state is handled by authUsers being empty
+    }
 
     const { data: profiles } = await supabase
         .from('profiles')
